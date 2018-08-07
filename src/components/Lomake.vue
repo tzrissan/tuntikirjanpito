@@ -7,18 +7,22 @@
 
             <label for="tuloaika" >Tuloaika</label>
             <input type="text" id="tuloaika" v-model="tuloaika"/>
-            <input type="button" class="now" value="< now" v-on:click="tulinJust()" /><br/>
+            <input type="button" class="now" value="< now" v-on:click="tulinJust()" />
+            <input type="button" class="now" value="< 9:00" v-on:click="tulinYsilt()" /><br/>
 
             <label for="lahtoaika" v-if="tuloaika">Lähtöaika</label>
             <input type="text" id="lahtoaika" v-model="lahtoaika" v-if="tuloaika"/>
-            <input type="button" class="now" value="< now"  v-if="tuloaika" v-on:click="meenIhanKohta()" /><br/>
+            <input type="button" class="now" value="< now"  v-if="tuloaika" v-on:click="meenIhanKohta()" />
+            <input type="button" class="now" value="< 17:00"  v-if="tuloaika" v-on:click="meenViidelta()" /><br/>
 
             <input type="submit" value="Tallenna" v-if="tuloaika && lahtoaika" />
         </form>
         <table>
             <tbody>
-            <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat)" v-bind:key="tyoaika.id">
-                <td>{{ tyoaika.date | moment("D.M.YYYY") }}</td>
+            <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat)" v-bind:key="tyoaika.id"
+                v-on:click="edit(tyoaika)">
+                <td >{{ tyoaika.id }}</td>
+                <td >{{ tyoaika.date | moment("D.M.YYYY") }}</td>
                 <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
                 <td>{{ tyoaika.lounaat }}</td>
                 <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
@@ -36,6 +40,7 @@
 
     const TIME_REGEX = /(\d\d?).(\d\d?)/;
     const UI_DATE_REGEX = /(\d\d?).(\d\d?).(\d{4})/;
+    const DB_DATE_REGEX = /(\d{4}).(\d{2}).(\d{2})/;
 
     function nyt() {
         const now = new Date();
@@ -64,6 +69,14 @@
         return `${year}-${month}-${day}`;
     }
 
+
+    function formatUiDateFromDbString(date) {
+        const day = numeral(date.replace(DB_DATE_REGEX, '$3')).format('00');
+        const month = numeral(date.replace(DB_DATE_REGEX, '$2')).format('00');
+        const year = numeral(date.replace(DB_DATE_REGEX, '$1')).format('0000');
+        return `${day}.${month}.${year}`;
+    }
+
     function tanaan() {
         const now = new Date();
         const day = now.getDate();
@@ -85,13 +98,21 @@
         props: {},
         methods: {
             tallenna(e) {
-                this.tyoajat.push({
-                    id: Math.floor(Math.random() * 1000000),
-                    date: formatDbDateFromUiString(this.date),
-                    tuloaika: formatTimeFromString(this.tuloaika),
-                    lahtoaika: formatTimeFromString(this.lahtoaika),
-                    lounaat: 1
-                });
+                if (this.id && this.tyoajat.find(t => t.id === this.id)) {
+                    const update = this.tyoajat.find(t => t.id === this.id);
+                    update.date = formatDbDateFromUiString(this.date);
+                    update.tuloaika = formatTimeFromString(this.tuloaika);
+                    update.lahtoaika = formatTimeFromString(this.lahtoaika);
+                    update.lounaat = 1
+                } else {
+                    this.tyoajat.push({
+                        id: Math.floor(Math.random() * 1000000),
+                        date: formatDbDateFromUiString(this.date),
+                        tuloaika: formatTimeFromString(this.tuloaika),
+                        lahtoaika: formatTimeFromString(this.lahtoaika),
+                        lounaat: 1
+                    });
+                }
                 this.date = tanaan();
                 this.tuloaika = undefined;
                 this.lahtoaika = undefined;
@@ -103,18 +124,40 @@
             tulinJust() {
                 this.tuloaika = nyt()
             },
+            tulinYsilt() {
+                this.tuloaika = '9:00';
+            },
             meenIhanKohta() {
                 this.lahtoaika = nyt()
+            },
+            meenViidelta() {
+                this.lahtoaika = '17:00';
             },
             aika(alku, loppu) {
                 const aikavali = aikavaliMinuutteina(alku, loppu);
                 const h = Math.trunc(aikavali / 60);
                 const m = numeral(Math.trunc(aikavali % 60)).format('00');
                 return `${h}:${m}`;
+            },
+            edit(tyoaika) {
+                if (tyoaika.editing) {
+                    tyoaika.editing = false;
+                } else {
+                    tyoaika.editing = true;
+                    console.log(tyoaika);
+                    this.id = tyoaika.id;
+                    this.date = formatUiDateFromDbString(tyoaika.date);
+                    this.tuloaika = tyoaika.tuloaika;
+                    this.lahtoaika = tyoaika.lahtoaika;
+                }
+            },
+            isEditing(tyoaika) {
+                return tyoaika.editing ? 'editing' : '';
             }
         },
         data() {
             return {
+                id: undefined,
                 today: new Date(),
                 date: tanaan(),
                 tuloaika: undefined,
@@ -159,5 +202,9 @@
 
     tr:nth-child(even) {background: #CCC}
     tr:nth-child(odd) {background: #FFF}
+
+    .editing {
+        color: red;
+    }
 
 </style>
