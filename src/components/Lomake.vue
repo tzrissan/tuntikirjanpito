@@ -19,12 +19,12 @@
         </form>
         <table>
             <tbody>
-            <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat)" v-bind:key="tyoaika.id"
+            <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="tyoaika.id"
                 v-on:click="edit(tyoaika)">
                 <td >{{ tyoaika.id }}</td>
                 <td >{{ tyoaika.date | moment("D.M.YYYY") }}</td>
                 <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
-                <td>{{ tyoaika.lounaat }}</td>
+                <td>{{ tyoaika.lounaita }}</td>
                 <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
             </tr>
             </tbody>
@@ -36,6 +36,7 @@
 
     import _ from 'lodash';
     import numeral from 'numeral';
+    import axios from 'axios';
     import Tuntikirjanpito from '../data.js';
 
     const TIME_REGEX = /(\d\d?).(\d\d?)/;
@@ -86,6 +87,9 @@
     }
 
     function aikavaliMinuutteina(alku, loppu) {
+        if (!alku || !loppu) {
+            return "-";
+        }
         const alkuH = parseInt(alku.replace(TIME_REGEX, '$1'));
         const alkuM = parseInt(alku.replace(TIME_REGEX, '$2'));
         const loppuH = parseInt(loppu.replace(TIME_REGEX, '$1'));
@@ -98,20 +102,25 @@
         props: {},
         methods: {
             tallenna(e) {
-                if (this.id && this.tyoajat.find(t => t.id === this.id)) {
-                    const update = this.tyoajat.find(t => t.id === this.id);
+                if (this.id && this.tyoajat.merkinnat.find(t => t.id === this.id)) {
+                    const update = this.tyoajat.merkinnat.find(t => t.id === this.id);
                     update.date = formatDbDateFromUiString(this.date);
                     update.tuloaika = formatTimeFromString(this.tuloaika);
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
-                    update.lounaat = 1
+                    update.lounaita = 1
                 } else {
-                    this.tyoajat.push({
-                        id: Math.floor(Math.random() * 1000000),
+                    const newLine = {
                         date: formatDbDateFromUiString(this.date),
                         tuloaika: formatTimeFromString(this.tuloaika),
                         lahtoaika: formatTimeFromString(this.lahtoaika),
-                        lounaat: 1
-                    });
+                        lounaita: 1
+                    };
+                    const merkinnat = this.tyoajat.merkinnat;
+                    axios.post('/tunnit.data', newLine)
+                        .then(function (response) {
+                            newLine.id = response.data[0].id;
+                            merkinnat.push(newLine);
+                        });
                 }
                 this.date = tanaan();
                 this.tuloaika = undefined;
@@ -140,6 +149,7 @@
                 return `${h}:${m}`;
             },
             edit(tyoaika) {
+
                 if (tyoaika.editing) {
                     tyoaika.editing = false;
                 } else {

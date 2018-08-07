@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // IDEA replace
 // (\d{1,2}\.\d{1,2}\.)\s*[a-zA-Z\s]*(\d{1,2}:\d\d)[\s-]*(\d{1,2}:\d\d).*(\d)
 // { date: '$1.2018', tuloaika: '$2', lahtoaika: '$3', lounaat: $4 },
@@ -13,10 +15,21 @@ const demo_data = [
     {id: 8, date: '2018-01-12', tuloaika: '09:05', lahtoaika: '16:00', lounaat: 1}
 ];
 
+const data = {
+    merkinnat: demo_data
+};
+
 const Tuntikirjanpito = {
     get() {
-        return demo_data;
+        return data;
     }
 };
+
+
+axios.create().get('/tunnit.data')
+    .then((response) => {
+        data.merkinnat = response.data;
+    });
+
 
 export default Tuntikirjanpito;
