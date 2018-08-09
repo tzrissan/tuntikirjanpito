@@ -2,33 +2,44 @@
     <div class="hello">
         <h1>{{ today | moment("D.M.YYYY") }}</h1>
         <form @submit="tallenna">
-            <label for="date">Päivä</label>
-            <input type="text" id="date" v-model="date"/><br/>
-
-            <label for="tuloaika" >Tuloaika</label>
-            <input type="text" id="tuloaika" v-model="tuloaika"/>
-            <input type="button" class="now" value="< now" v-on:click="tulinJust()" />
-            <input type="button" class="now" value="< 9:00" v-on:click="tulinYsilt()" /><br/>
-
-            <label for="lahtoaika" v-if="tuloaika">Lähtöaika</label>
-            <input type="text" id="lahtoaika" v-model="lahtoaika" v-if="tuloaika"/>
-            <input type="button" class="now" value="< now"  v-if="tuloaika" v-on:click="meenIhanKohta()" />
-            <input type="button" class="now" value="< 17:00"  v-if="tuloaika" v-on:click="meenViidelta()" /><br/>
-
-            <input type="submit" value="Tallenna" v-if="tuloaika && lahtoaika" />
+            <table>
+                <thead>
+                <tr class="lomake">
+                    <td>{{ id }}</td>
+                    <td><input type="text" id="date" maxlength="10" v-model="date"/></td>
+                    <td><input type="text" id="tuloaika" maxlength="5" v-model="tuloaika"/>
+                        <input type="button" value="< ny" v-on:click="tulinJust()"/>
+                        <input type="button" value="< 9:00" v-on:click="tulinYsilt()"/>
+                        -
+                        <input type="text" id="lahtoaika" v-model="lahtoaika"/>
+                        <input type="button" value="< ny" v-on:click="meenIhanKohta()"/>
+                        <input type="button" value="< 17:00" v-on:click="meenViidelta()"/>
+                    </td>
+                    <td>1</td>
+                    <td><input type="submit" value="Tallenna" v-if="tuloaika && lahtoaika"/>
+                        <input type="reset" value="Peruuta" v-if="id" v-on:click="tyhjenna()"/>
+                    </td>
+                </tr>
+                <tr>
+                    <th>id</th>
+                    <th>pvm</th>
+                    <th>tulo- ja lähtöajat</th>
+                    <th>lounas</th>
+                    <th>työaika</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="tyoaika.id"
+                    v-on:click="edit(tyoaika)">
+                    <td>{{ tyoaika.id }}</td>
+                    <td>{{ tyoaika.date | moment("D.M.YYYY") }}</td>
+                    <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
+                    <td>{{ tyoaika.lounaita }}</td>
+                    <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
+                </tr>
+                </tbody>
+            </table>
         </form>
-        <table>
-            <tbody>
-            <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="tyoaika.id"
-                v-on:click="edit(tyoaika)">
-                <td >{{ tyoaika.id }}</td>
-                <td >{{ tyoaika.date | moment("D.M.YYYY") }}</td>
-                <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
-                <td>{{ tyoaika.lounaita }}</td>
-                <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
-            </tr>
-            </tbody>
-        </table>
     </div>
 </template>
 
@@ -47,10 +58,10 @@
         const now = new Date();
         let hour = now.getHours();
         const minute = now.getMinutes();
-        let minuteRounded = Math.round(minute/5)*5;
+        let minuteRounded = Math.round(minute / 5) * 5;
         if (minuteRounded >= 60) {
             hour++;
-            minuteRounded-=60;
+            minuteRounded -= 60;
         }
         const hourFormatted = numeral(hour).format('00');
         const minuteRoundedAndFormatted = numeral(minuteRounded).format('00');
@@ -102,12 +113,17 @@
         props: {},
         methods: {
             tallenna(e) {
+                e.preventDefault();
                 if (this.id && this.tyoajat.merkinnat.find(t => t.id === this.id)) {
                     const update = this.tyoajat.merkinnat.find(t => t.id === this.id);
                     update.date = formatDbDateFromUiString(this.date);
                     update.tuloaika = formatTimeFromString(this.tuloaika);
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
                     update.lounaita = 1
+                    axios.put('/tunnit.data', update)
+                        .then(function (response) {
+                            //NOOP
+                        });
                 } else {
                     const newLine = {
                         date: formatDbDateFromUiString(this.date),
@@ -122,10 +138,16 @@
                             merkinnat.push(newLine);
                         });
                 }
+                this.id = undefined;
                 this.date = tanaan();
                 this.tuloaika = undefined;
                 this.lahtoaika = undefined;
-                e.preventDefault();
+            },
+            tyhjenna() {
+                this.id = undefined;
+                this.date = tanaan();
+                this.tuloaika = undefined;
+                this.lahtoaika = undefined;
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, 'date').reverse();
@@ -149,12 +171,10 @@
                 return `${h}:${m}`;
             },
             edit(tyoaika) {
-
                 if (tyoaika.editing) {
                     tyoaika.editing = false;
                 } else {
                     tyoaika.editing = true;
-                    console.log(tyoaika);
                     this.id = tyoaika.id;
                     this.date = formatUiDateFromDbString(tyoaika.date);
                     this.tuloaika = tyoaika.tuloaika;
@@ -187,18 +207,21 @@
         margin: 5px 0;
     }
 
-    input {
-        width: 150px;
+    input[text] {
         text-align: left;
         margin: 5px 0;
         padding: 2px 15px;
     }
 
-    input.now {
-        width: initial;
-        padding: 2px 5px;
+    input#date {
+        width: 80px;
+        padding: 2px 10px;
     }
 
+    input#tuloaika, input#lahtoaika {
+        width: 50px;
+        padding: 2px 10px;
+    }
 
     table {
         border: 1px solid black;
@@ -210,11 +233,19 @@
         padding: 3px 15px;
     }
 
-    tr:nth-child(even) {background: #CCC}
-    tr:nth-child(odd) {background: #FFF}
+    tr:nth-child(even) {
+        background: #CCC
+    }
 
-    .editing {
-        color: red;
+    tr:nth-child(odd) {
+        background: #FFF
+    }
+
+    th {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        padding: 10px 20px;
     }
 
 </style>
+
