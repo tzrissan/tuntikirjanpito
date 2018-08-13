@@ -25,10 +25,13 @@
                 <tr>
                     <th>id</th>
                     <th>pvm</th>
-                    <th colspan="3">tulo- ja lähtöajat</th>
+                    <th>tuloaika</th>
+                    <th> </th>
+                    <th>lähtöaika</th>
                     <th>lounas</th>
                     <th>työaika</th>
-                    <th colspan="2">saldo</th>
+                    <th>saldo</th>
+                    <th>&Delta;</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -116,8 +119,8 @@
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
                     update.lounaita = this.lounaita;
                     axios.put('/tunnit.data', update)
-                        .then(function (response) {
-                            //NOOP
+                        .then(function () {
+                            Tuntikirjanpito.laskeSaldot();
                         });
                 } else {
                     const newLine = {
@@ -129,8 +132,9 @@
                     const merkinnat = this.tyoajat.merkinnat;
                     axios.post('/tunnit.data', newLine)
                         .then(function (response) {
-                            newLine.id = response.data[0].id;
+                            newLine.id = response.data;
                             merkinnat.push(newLine);
+                            Tuntikirjanpito.laskeSaldot();
                         });
                 }
                 this.tyhjenna();
@@ -180,7 +184,7 @@
                 const h = numeral(Math.trunc(minuutteja / 60)).format('0');
                 const m = numeral(Math.trunc(minuutteja % 60)).format('00');
                 const fullText = `${sign}${d}:${h}:${m}`;
-                return fullText.replace(/0:/g, '').replace(/^([+-]?\d{1,2})$/,'$1 min')
+                return fullText.replace(/0:0:(\d+)/, '$1 min').replace(/0:(\d+:\d+)/, '$1');
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {
