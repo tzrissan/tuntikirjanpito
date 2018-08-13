@@ -7,7 +7,7 @@
                 <tr class="lomake">
                     <td>{{ id }}</td>
                     <td><input type="text" id="date" maxlength="10" v-model="date"/></td>
-                    <td>
+                    <td colspan="3">
                         <input type="text" id="tuloaika" maxlength="5" v-model="tuloaika"/>
                         <input type="button" value="ny" v-on:click="tulinJust()"/>
                         <input type="button" value="9" v-on:click="tulinYsilt()"/>
@@ -17,7 +17,7 @@
                         <input type="button" value="5" v-on:click="meenViidelta()"/>
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
-                    <td>
+                    <td colspan="3">
                         <input type="submit" value="Tallenna" v-if="tuloaika"/>
                         <input type="reset" value="Peruuta" v-if="id" v-on:click="tyhjenna()"/>
                     </td>
@@ -25,10 +25,10 @@
                 <tr>
                     <th>id</th>
                     <th>pvm</th>
-                    <th>tulo- ja lähtöajat</th>
+                    <th colspan="3">tulo- ja lähtöajat</th>
                     <th>lounas</th>
                     <th>työaika</th>
-                    <th>saldo</th>
+                    <th colspan="2">saldo</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -36,10 +36,11 @@
                     v-on:click="edit(tyoaika)">
                     <td>{{ tyoaika.id }}</td>
                     <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
-                    <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
+                    <td>{{ tyoaika.tuloaika }}</td><td>-</td><td>{{ tyoaika.lahtoaika }}</td>
                     <td>{{ tyoaika.lounaita }}</td>
                     <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
-                    <td>{{ saldo(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita, tyoaika.saldo) }}</td>
+                    <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
+                    <td><small>{{ saldo(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</small></td>
                 </tr>
                 </tbody>
             </table>
@@ -53,10 +54,7 @@
     import numeral from 'numeral';
     import axios from 'axios';
     import Tuntikirjanpito from '../data.js';
-
-    const TIME_REGEX = /(\d\d?).(\d\d?)/;
-    const UI_DATE_REGEX = /(\d\d?).(\d\d?).(\d{4})/;
-    const DB_DATE_REGEX = /(\d{4}).(\d{2}).(\d{2})/;
+    import {aikavaliMinuutteina, TIME_REGEX, DB_DATE_REGEX, UI_DATE_REGEX} from '../data.js';
 
     function nyt() {
         const now = new Date();
@@ -105,27 +103,6 @@
         return `${day}.${month}.${year}`;
     }
 
-    function aikavaliMinuutteina(alku, loppu, lounaita=0) {
-        if (!alku || !loppu) {
-            return "-";
-        }
-        const alkuH = parseInt(alku.replace(TIME_REGEX, '$1'));
-        const alkuM = parseInt(alku.replace(TIME_REGEX, '$2'));
-        const loppuH = parseInt(loppu.replace(TIME_REGEX, '$1'));
-        const loppuM = parseInt(loppu.replace(TIME_REGEX, '$2'));
-        return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
-    }
-
-    function aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
-        const sign = aikavaliMinuutteina > 0 ? (naytaPlusMerkki ? '+' : '') : '-';
-        const minuutteja = Math.abs(aikavaliMinuutteina);
-        const d = numeral(Math.trunc(minuutteja / (24*60))).format('0');
-        const h = numeral(Math.trunc(minuutteja / 60)).format('0');
-        const m = numeral(Math.trunc(minuutteja % 60)).format('00');
-        const fullText = `${sign}${d}:${h}:${m}`;
-        return fullText.replace(/0:/g, '')
-    }
-
     export default {
         name: 'Lomake',
         props: {},
@@ -166,7 +143,7 @@
                 this.lounaita = 1;
             },
             laskevassaJarjestyksessa(rivit) {
-                return _.sortBy(rivit, 'date').reverse();
+                return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
             },
             tulinJust() {
                 this.tuloaika = nyt()
@@ -184,17 +161,26 @@
                 if (!alku || !loppu) {
                     return undefined;
                 } else {
-                    return aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
+                    return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
                 }
             },
-            saldo(alku, loppu, lounaita, summa) {
+            saldo(alku, loppu, lounaita) {
                 if (!alku || !loppu) {
                     return undefined;
                 } else {
                     const aikavali = aikavaliMinuutteina(alku, loppu, lounaita);
                     const saldomuutos = aikavali - (7.5 * 60);
-                    return aikavali2UiStr(saldomuutos, true);
+                    return this.aikavali2UiStr(saldomuutos, true);
                 }
+            },
+            aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
+                const sign = aikavaliMinuutteina > 0 ? (naytaPlusMerkki ? '+' : '') : '-';
+                const minuutteja = Math.abs(aikavaliMinuutteina);
+                const d = numeral(Math.trunc(minuutteja / (24*60))).format('0');
+                const h = numeral(Math.trunc(minuutteja / 60)).format('0');
+                const m = numeral(Math.trunc(minuutteja % 60)).format('00');
+                const fullText = `${sign}${d}:${h}:${m}`;
+                return fullText.replace(/0:/g, '').replace(/^([+-]?\d{1,2})$/,'$1 min')
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {
