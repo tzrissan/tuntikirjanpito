@@ -30,10 +30,10 @@
                     <th></th>
                     <th>lähtöaika</th>
                     <th>lounas</th>
-                    <th>kirjaus</th>
                     <th>työaika</th>
+                    <th>kirjaus</th>
+                    <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
-                    <th>&Delta;</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -43,10 +43,10 @@
                     <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
                     <td>{{ tyoaika.tuloaika }}</td><td>-</td><td>{{ tyoaika.lahtoaika }}</td>
                     <td>{{ tyoaika.lounaita }}</td>
-                    <td><span v-if="tyoaika.kirjaus">{{ tyoaika.kirjaus }} h</span></td>
                     <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
-                    <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
+                    <td><span v-if="tyoaika.kirjaus">{{ tyoaika.kirjaus }} h</span></td>
                     <td><small>{{ aikavali2UiStr(tyoaika.saldomuutos) }}</small></td>
+                    <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -172,15 +172,6 @@
                     return undefined;
                 } else {
                     return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
-                }
-            },
-            saldo(alku, loppu, lounaita) {
-                if (!alku || !loppu) {
-                    return undefined;
-                } else {
-                    const aikavali = aikavaliMinuutteina(alku, loppu, lounaita);
-                    const saldomuutos = aikavali - (7.5 * 60);
-                    return this.aikavali2UiStr(saldomuutos, true);
                 }
             },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
