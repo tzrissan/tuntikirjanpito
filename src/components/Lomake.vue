@@ -178,7 +178,7 @@
                 }
             },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
-                const sign = aikavaliMinuutteina > 0 ? (naytaPlusMerkki ? '+' : '') : '-';
+                const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
                 const minuutteja = Math.abs(aikavaliMinuutteina);
                 const d = numeral(Math.trunc(minuutteja / (24*60))).format('0');
                 const h = numeral(Math.trunc(minuutteja / 60)).format('0');
