@@ -9,12 +9,12 @@
                     <td><input type="text" id="date" maxlength="10" v-model="date"/></td>
                     <td>
                         <input type="text" id="tuloaika" maxlength="5" v-model="tuloaika"/>
-                        <input type="button" value="< ny" v-on:click="tulinJust()"/>
-                        <input type="button" value="< 9:00" v-on:click="tulinYsilt()"/>
+                        <input type="button" value="ny" v-on:click="tulinJust()"/>
+                        <input type="button" value="9" v-on:click="tulinYsilt()"/>
                         -
                         <input type="text" id="lahtoaika" v-model="lahtoaika"/>
-                        <input type="button" value="< ny" v-on:click="meenIhanKohta()"/>
-                        <input type="button" value="< 17:00" v-on:click="meenViidelta()"/>
+                        <input type="button" value="ny" v-on:click="meenIhanKohta()"/>
+                        <input type="button" value="5" v-on:click="meenViidelta()"/>
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
                     <td>
@@ -34,7 +34,7 @@
                 <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="tyoaika.id"
                     v-on:click="edit(tyoaika)">
                     <td>{{ tyoaika.id }}</td>
-                    <td>{{ tyoaika.date | moment("D.M.YYYY") }}</td>
+                    <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
                     <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
                     <td>{{ tyoaika.lounaita }}</td>
                     <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
