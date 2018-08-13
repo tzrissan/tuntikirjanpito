@@ -38,10 +38,11 @@ function laskeSaldot() {
     _.chain(data.merkinnat)
         .sortBy(['date', 'tuloaika'])
         .forEach((merkinta, index, merkinnat) => {
+            const saldomuutos = aikavaliMinuutteina(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita) - (7.5 * 60);
             if (index===0) {
-                merkinta.saldo = 0;
+                merkinta.saldo = (_.isNaN(saldomuutos) ? 0 : saldomuutos);
             } else {
-                const saldomuutos = aikavaliMinuutteina(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita) - (7.5 * 60);
+
                 merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(saldomuutos) ? 0 : saldomuutos);
             }
 
