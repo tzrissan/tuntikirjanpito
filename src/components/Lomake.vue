@@ -28,6 +28,7 @@
                     <th>tulo- ja lähtöajat</th>
                     <th>lounas</th>
                     <th>työaika</th>
+                    <th>saldo</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -37,7 +38,8 @@
                     <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
                     <td>{{ tyoaika.tuloaika }} - {{ tyoaika.lahtoaika }}</td>
                     <td>{{ tyoaika.lounaita }}</td>
-                    <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika) }}</td>
+                    <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
+                    <td>{{ saldo(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita, tyoaika.saldo) }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -103,7 +105,7 @@
         return `${day}.${month}.${year}`;
     }
 
-    function aikavaliMinuutteina(alku, loppu) {
+    function aikavaliMinuutteina(alku, loppu, lounaita=0) {
         if (!alku || !loppu) {
             return "-";
         }
@@ -111,7 +113,17 @@
         const alkuM = parseInt(alku.replace(TIME_REGEX, '$2'));
         const loppuH = parseInt(loppu.replace(TIME_REGEX, '$1'));
         const loppuM = parseInt(loppu.replace(TIME_REGEX, '$2'));
-        return (loppuH - alkuH) * 60 + (loppuM - alkuM);
+        return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
+    }
+
+    function aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
+        const sign = aikavaliMinuutteina > 0 ? (naytaPlusMerkki ? '+' : '') : '-';
+        const minuutteja = Math.abs(aikavaliMinuutteina);
+        const d = numeral(Math.trunc(minuutteja / (24*60))).format('0');
+        const h = numeral(Math.trunc(minuutteja / 60)).format('0');
+        const m = numeral(Math.trunc(minuutteja % 60)).format('00');
+        const fullText = `${sign}${d}:${h}:${m}`;
+        return fullText.replace(/0:/g, '')
     }
 
     export default {
@@ -168,14 +180,20 @@
             meenViidelta() {
                 this.lahtoaika = '17:00';
             },
-            aika(alku, loppu) {
+            aika(alku, loppu, lounaita) {
                 if (!alku || !loppu) {
                     return undefined;
                 } else {
-                    const aikavali = aikavaliMinuutteina(alku, loppu);
-                    const h = Math.trunc(aikavali / 60);
-                    const m = numeral(Math.trunc(aikavali % 60)).format('00');
-                    return `${h}:${m}`;
+                    return aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
+                }
+            },
+            saldo(alku, loppu, lounaita, summa) {
+                if (!alku || !loppu) {
+                    return undefined;
+                } else {
+                    const aikavali = aikavaliMinuutteina(alku, loppu, lounaita);
+                    const saldomuutos = aikavali - (7.5 * 60);
+                    return aikavali2UiStr(saldomuutos, true);
                 }
             },
             edit(tyoaika) {
