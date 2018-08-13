@@ -23,14 +23,14 @@ export function aikavaliMinuutteina(alku, loppu, lounaita=0) {
 
 const data = {
     merkinnat: [
-        {id: 1, date: '2018-01-02', tuloaika: '09:05', lahtoaika: '16:50', lounaita: 1, kirjaus: 7.5},
+        {id: 1, date: '2018-01-02', tuloaika: '09:05', lahtoaika: '16:50', lounaita: 1, kirjaus: 7},
         {id: 2, date: '2018-01-03', tuloaika: '09:10', lahtoaika: '17:30', lounaita: 2, kirjaus: 7.5},
-        {id: 3, date: '2018-01-04', tuloaika: '09:05', lahtoaika: '17:00', lounaita: 1, kirjaus: 7.5},
-        {id: 4, date: '2018-01-05', tuloaika: '08:45', lahtoaika: '16:20', lounaita: 1, kirjaus: 7.5},
-        {id: 5, date: '2018-01-09', tuloaika: '08:50', lahtoaika: '20:25', lounaita: 2, kirjaus: 7.5},
+        {id: 3, date: '2018-01-04', tuloaika: '09:05', lahtoaika: '17:00', lounaita: 1, kirjaus: 12},
+        {id: 4, date: '2018-01-05', tuloaika: '08:45', lahtoaika: '16:20', lounaita: 1},
+        {id: 5, date: '2018-01-09', tuloaika: '08:50', lahtoaika: '20:25', lounaita: 2, kirjaus: 10.5},
         {id: 6, date: '2018-01-10', tuloaika: '09:10', lahtoaika: '18:00', lounaita: 1, kirjaus: 7.5},
-        {id: 7, date: '2018-01-11', tuloaika: '08:55', lahtoaika: '17:15', lounaita: 1, kirjaus: 7.5},
-        {id: 8, date: '2018-01-12', tuloaika: '09:05', lounaita: 1}
+        {id: 7, date: '2018-01-11', tuloaika: '08:55', lahtoaika: '17:15', lounaita: 1, kirjaus: 5},
+        {id: 8, date: '2018-01-12', tuloaika: '09:05', lounaita: 1, kirjaus: 8}
     ]
 };
 
@@ -38,14 +38,12 @@ function laskeSaldot() {
     _.chain(data.merkinnat)
         .sortBy(['date', 'tuloaika'])
         .forEach((merkinta, index, merkinnat) => {
-            const saldomuutos = aikavaliMinuutteina(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita) - (7.5 * 60);
-            if (index===0) {
-                merkinta.saldo = (_.isNaN(saldomuutos) ? 0 : saldomuutos);
+            merkinta.saldomuutos = (_.isNumber(merkinta.kirjaus) ? (merkinta.kirjaus * 60) : 0) - (7.5 * 60);
+            if (index === 0) {
+                merkinta.saldo = (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
             } else {
-
-                merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(saldomuutos) ? 0 : saldomuutos);
+                merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
             }
-
         })
         .value();
 }

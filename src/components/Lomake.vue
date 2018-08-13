@@ -27,7 +27,7 @@
                     <th>id</th>
                     <th>pvm</th>
                     <th>tuloaika</th>
-                    <th> </th>
+                    <th></th>
                     <th>lähtöaika</th>
                     <th>lounas</th>
                     <th>kirjaus</th>
@@ -46,7 +46,7 @@
                     <td><span v-if="tyoaika.kirjaus">{{ tyoaika.kirjaus }} h</span></td>
                     <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
                     <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
-                    <td><small>{{ saldo(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</small></td>
+                    <td><small>{{ aikavali2UiStr(tyoaika.saldomuutos) }}</small></td>
                 </tr>
                 </tbody>
             </table>
