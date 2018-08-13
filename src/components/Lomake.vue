@@ -17,6 +17,7 @@
                         <input type="button" value="5" v-on:click="meenViidelta()"/>
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
+                    <td></td>
                     <td><input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/></td>
                     <td colspan="3">
                         <input type="submit" value="Tallenna" v-if="tuloaika"/>
@@ -122,29 +123,30 @@
                     update.date = formatDbDateFromUiString(this.date);
                     update.tuloaika = formatTimeFromString(this.tuloaika);
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
-                    update.lounaita = this.lounaita;
-                    update.kirjaus = this.kirjaus;
+                    update.lounaita = parseInt(this.lounaita);
+                    update.kirjaus = parseFloat(this.kirjaus);
+                    const merkinnat = this.tyoajat.merkinnat;
                     axios.put('/tunnit.data', update)
                         .then(function () {
-                            Tuntikirjanpito.laskeSaldot();
+                            Tuntikirjanpito.laskeSaldot(merkinnat);
                         });
                 } else {
                     const newLine = {
                         date: formatDbDateFromUiString(this.date),
                         tuloaika: formatTimeFromString(this.tuloaika),
                         lahtoaika: formatTimeFromString(this.lahtoaika),
-                        lounaita: this.lounaita,
-                        kirjaus: this.kirjaus
+                        lounaita: parseInt(this.lounaita),
+                        kirjaus: parseFloat(this.kirjaus)
                     };
                     const merkinnat = this.tyoajat.merkinnat;
                     axios.post('/tunnit.data', newLine)
                         .then(function (response) {
                             newLine.id = response.data;
                             merkinnat.push(newLine);
-                            Tuntikirjanpito.laskeSaldot();
+                            Tuntikirjanpito.laskeSaldot(merkinnat);
                         });
                 }
-                this.tyhjenna();
+                //this.tyhjenna();
             },
             tyhjenna() {
                 this.id = undefined;
@@ -190,7 +192,7 @@
                 const h = numeral(Math.trunc(minuutteja / 60)).format('0');
                 const m = numeral(Math.trunc(minuutteja % 60)).format('00');
                 const fullText = `${sign}${d}:${h}:${m}`;
-                return fullText.replace(/0:0:(\d+)/, '$1 min').replace(/0:(\d+:\d+)/, '$1');
+                return fullText.replace(/0:(\d+:\d+)/, '$1');
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {

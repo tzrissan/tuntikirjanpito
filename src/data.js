@@ -34,10 +34,19 @@ const data = {
     ]
 };
 
-function laskeSaldot() {
-    _.chain(data.merkinnat)
+function laskeSaldot(merkinnat) {
+    _.sortBy(merkinnat, ['date', 'tuloaika']).forEach(function(merkinta, index, merkinnat) {
+        merkinta.saldomuutos = (_.isNumber(merkinta.kirjaus) ? (merkinta.kirjaus * 60) : 0) - (7.5 * 60);
+        if (index === 0) {
+            merkinta.saldo = (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
+        } else {
+            merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
+        }
+    });
+
+    /*_.chain(merkinnat)
         .sortBy(['date', 'tuloaika'])
-        .forEach((merkinta, index, merkinnat) => {
+        .forEach(function(merkinta, index, merkinnat) {
             merkinta.saldomuutos = (_.isNumber(merkinta.kirjaus) ? (merkinta.kirjaus * 60) : 0) - (7.5 * 60);
             if (index === 0) {
                 merkinta.saldo = (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
@@ -45,23 +54,24 @@ function laskeSaldot() {
                 merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
             }
         })
-        .value();
+        .value();*/
+    console.log(merkinnat);
 }
 
-laskeSaldot();
+laskeSaldot(data.merkinnat);
 
 axios.create().get('/tunnit.data')
     .then((response) => {
+        laskeSaldot(response.data);
         data.merkinnat = response.data;
-        laskeSaldot();
     });
 
 const Tuntikirjanpito = {
     get() {
         return data;
     },
-    laskeSaldot() {
-        laskeSaldot();
+    laskeSaldot(merkinnat) {
+        laskeSaldot(merkinnat);
     }
 };
 
