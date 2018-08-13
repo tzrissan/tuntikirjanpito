@@ -232,7 +232,7 @@
 
     table {
         border: 1px solid black;
-        width: 100%;
+        margin: 20px auto;
         border-collapse: collapse;
     }
 
