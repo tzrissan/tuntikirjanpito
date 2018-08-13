@@ -71,9 +71,13 @@
     }
 
     function formatTimeFromString(time) {
-        const hour = numeral(time.replace(TIME_REGEX, '$1')).format('00');
-        const minute = numeral(time.replace(TIME_REGEX, '$2')).format('00');
-        return `${hour}:${minute}`;
+        if (!time || time.length ===0) {
+            return undefined;
+        } else {
+            const hour = numeral(time.replace(TIME_REGEX, '$1')).format('00');
+            const minute = numeral(time.replace(TIME_REGEX, '$2')).format('00');
+            return `${hour}:${minute}`;
+        }
     }
 
     function formatDbDateFromUiString(date) {
@@ -165,10 +169,14 @@
                 this.lahtoaika = '17:00';
             },
             aika(alku, loppu) {
-                const aikavali = aikavaliMinuutteina(alku, loppu);
-                const h = Math.trunc(aikavali / 60);
-                const m = numeral(Math.trunc(aikavali % 60)).format('00');
-                return `${h}:${m}`;
+                if (!alku || !loppu) {
+                    return undefined;
+                } else {
+                    const aikavali = aikavaliMinuutteina(alku, loppu);
+                    const h = Math.trunc(aikavali / 60);
+                    const m = numeral(Math.trunc(aikavali % 60)).format('00');
+                    return `${h}:${m}`;
+                }
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {
