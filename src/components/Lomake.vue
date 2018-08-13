@@ -17,6 +17,7 @@
                         <input type="button" value="5" v-on:click="meenViidelta()"/>
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
+                    <td><input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/></td>
                     <td colspan="3">
                         <input type="submit" value="Tallenna" v-if="tuloaika"/>
                         <input type="reset" value="Peruuta" v-if="id" v-on:click="tyhjenna()"/>
@@ -29,6 +30,7 @@
                     <th> </th>
                     <th>lähtöaika</th>
                     <th>lounas</th>
+                    <th>kirjaus</th>
                     <th>työaika</th>
                     <th>saldo</th>
                     <th>&Delta;</th>
@@ -41,6 +43,7 @@
                     <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
                     <td>{{ tyoaika.tuloaika }}</td><td>-</td><td>{{ tyoaika.lahtoaika }}</td>
                     <td>{{ tyoaika.lounaita }}</td>
+                    <td><span v-if="tyoaika.kirjaus">{{ tyoaika.kirjaus }} h</span></td>
                     <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
                     <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
                     <td><small>{{ saldo(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</small></td>
@@ -118,6 +121,7 @@
                     update.tuloaika = formatTimeFromString(this.tuloaika);
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
                     update.lounaita = this.lounaita;
+                    update.kirjaus = this.kirjaus;
                     axios.put('/tunnit.data', update)
                         .then(function () {
                             Tuntikirjanpito.laskeSaldot();
@@ -127,7 +131,8 @@
                         date: formatDbDateFromUiString(this.date),
                         tuloaika: formatTimeFromString(this.tuloaika),
                         lahtoaika: formatTimeFromString(this.lahtoaika),
-                        lounaita: this.lounaita
+                        lounaita: this.lounaita,
+                        kirjaus: this.kirjaus
                     };
                     const merkinnat = this.tyoajat.merkinnat;
                     axios.post('/tunnit.data', newLine)
@@ -145,6 +150,7 @@
                 this.tuloaika = undefined;
                 this.lahtoaika = undefined;
                 this.lounaita = 1;
+                this.kirjaus = 7.5;
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
@@ -196,6 +202,7 @@
                     this.tuloaika = tyoaika.tuloaika;
                     this.lahtoaika = tyoaika.lahtoaika;
                     this.lounaita = tyoaika.lounaita;
+                    this.kirjaus = tyoaika.kirjaus;
                 }
             },
             isEditing(tyoaika) {
@@ -210,6 +217,7 @@
                 tuloaika: undefined,
                 lahtoaika: undefined,
                 lounaita: 1,
+                kirjaus: 7.5,
                 tyoajat: Tuntikirjanpito.get()
             }
         }
