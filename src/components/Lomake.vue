@@ -32,21 +32,23 @@
                     <th>lounas</th>
                     <th>työaika</th>
                     <th>kirjaus</th>
+                    <th><small>todellisuus<br>- kirjaus</small></th>
                     <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="tyoaika in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="tyoaika.id"
-                    v-on:click="edit(tyoaika)">
-                    <td>{{ tyoaika.id }}</td>
-                    <td>{{ tyoaika.date | moment("dd D.M.YYYY") }}</td>
-                    <td>{{ tyoaika.tuloaika }}</td><td>-</td><td>{{ tyoaika.lahtoaika }}</td>
-                    <td>{{ tyoaika.lounaita }}</td>
-                    <td>{{ aika(tyoaika.tuloaika, tyoaika.lahtoaika, tyoaika.lounaita) }}</td>
-                    <td><span v-if="tyoaika.kirjaus">{{ tyoaika.kirjaus }} h</span></td>
-                    <td><small>{{ aikavali2UiStr(tyoaika.saldomuutos) }}</small></td>
-                    <td>{{ aikavali2UiStr(tyoaika.saldo) }}</td>
+                <tr v-for="t in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="t.id"
+                    v-on:click="edit(t)">
+                    <td>{{ t.id }}</td>
+                    <td>{{ t.date | moment("dd D.M.YYYY") }}</td>
+                    <td>{{ t.tuloaika }}</td><td>-</td><td>{{ t.lahtoaika }}</td>
+                    <td>{{ t.lounaita }}</td>
+                    <td>{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
+                    <td><span v-if="t.kirjaus">{{ t.kirjaus }} h</span></td>
+                    <td><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
+                    <td><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
+                    <td>{{ aikavali2UiStr(t.saldo) }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -167,11 +169,18 @@
             meenViidelta() {
                 this.lahtoaika = '17:00';
             },
-            aika(alku, loppu, lounaita) {
+            tyoaika(alku, loppu, lounaita) {
                 if (!alku || !loppu) {
                     return undefined;
                 } else {
                     return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
+                }
+            },
+            kirjausvirhe(alku, loppu, lounaita, kirjaus) {
+                if (!alku || !loppu || !kirjaus) {
+                    return undefined;
+                } else {
+                    return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita) - (kirjaus*60));
                 }
             },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
