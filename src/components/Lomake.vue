@@ -18,7 +18,10 @@
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
                     <td></td>
-                    <td><input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/></td>
+                    <td>
+                        <input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
+                        <input type="button" value="7½" v-on:click="normiTunnit()"/>
+                    </td>
                     <td colspan="3">
                         <input type="submit" value="Tallenna" v-if="tuloaika"/>
                         <input type="reset" value="Peruuta" v-if="id" v-on:click="tyhjenna()"/>
@@ -171,6 +174,9 @@
             meenViidelta() {
                 this.lahtoaika = '17:00';
             },
+            normiTunnit() {
+                this.kirjaus = 7.5;
+            },
             tyoaika(alku, loppu, lounaita) {
                 if (!alku || !loppu) {
                     return undefined;
@@ -192,7 +198,7 @@
                 const h = numeral(Math.trunc(minuutteja / 60)).format('0');
                 const m = numeral(Math.trunc(minuutteja % 60)).format('00');
                 const fullText = `${sign}${d}:${h}:${m}`;
-                return fullText.replace(/0:(\d+:\d+)/, '$1');
+                return fullText.replace(/0:(\d+:\d+)/, '$1').replace(/0:00/, '-');
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {
@@ -253,6 +259,11 @@
 
     input#lounaita {
         width: 30px;
+        padding: 2px 0 2px 10px;
+    }
+
+    input#kirjaus {
+        width: 50px;
         padding: 2px 0 2px 10px;
     }
 
