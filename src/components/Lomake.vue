@@ -9,22 +9,23 @@
                     <td><input type="text" id="date" maxlength="10" v-model="date"/></td>
                     <td colspan="3">
                         <input type="text" id="tuloaika" maxlength="5" v-model="tuloaika"/>
-                        <input type="button" value="ny" v-on:click="tulinJust()"/>
-                        <input type="button" value="9" v-on:click="tulinYsilt()"/>
+                        <button v-on:click="tulinJust()">ny</button>
+                        <button v-on:click="tulinYsilt()">9</button>
                         -
                         <input type="text" id="lahtoaika" v-model="lahtoaika"/>
-                        <input type="button" value="ny" v-on:click="meenIhanKohta()"/>
-                        <input type="button" value="5" v-on:click="meenViidelta()"/>
+                        <button v-on:click="meenIhanKohta()">ny</button>
+                        <button v-on:click="meenViidelta()">5</button>
                     </td>
                     <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
                     <td></td>
                     <td>
                         <input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
-                        <input type="button" value="7½" v-on:click="normiTunnit()"/>
+                        <button v-on:click="normiTunnit()">7½</button>
                     </td>
-                    <td colspan="3">
-                        <input type="submit" value="Tallenna" v-if="tuloaika"/>
-                        <input type="reset" value="Peruuta" v-if="id" v-on:click="tyhjenna()"/>
+                    <td colspan="3"><input id="kommentti" type="text" v-model="kommentti"/></td>
+                    <td colspan="1">
+                        <button type="submit" v-if="tuloaika">&#x2713;</button>
+                        <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
                     </td>
                 </tr>
                 <tr>
@@ -39,6 +40,7 @@
                     <th><small>todellisuus<br>- kirjaus</small></th>
                     <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
+                    <th>kommentti</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -52,7 +54,8 @@
                     <td><span v-if="t.kirjaus">{{ t.kirjaus }} h</span></td>
                     <td><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
                     <td><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
-                    <td>{{ aikavali2UiStr(t.saldo) }}</td>
+                    <td class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
+                    <td class="kommentti">{{ t.kommentti }}</td>
                 </tr>
                 </tbody>
             </table>
@@ -128,6 +131,7 @@
                     update.lahtoaika = formatTimeFromString(this.lahtoaika);
                     update.lounaita = parseInt(this.lounaita);
                     update.kirjaus = parseFloat(this.kirjaus);
+                    update.kommentti = this.kommentti;
                     const merkinnat = this.tyoajat.merkinnat;
                     axios.put('/tunnit.data', update)
                         .then(function () {
@@ -139,7 +143,8 @@
                         tuloaika: formatTimeFromString(this.tuloaika),
                         lahtoaika: formatTimeFromString(this.lahtoaika),
                         lounaita: parseInt(this.lounaita),
-                        kirjaus: parseFloat(this.kirjaus)
+                        kirjaus: parseFloat(this.kirjaus),
+                        kommentti: this.kommentti
                     };
                     const merkinnat = this.tyoajat.merkinnat;
                     axios.post('/tunnit.data', newLine)
@@ -147,6 +152,7 @@
                             newLine.id = response.data;
                             merkinnat.push(newLine);
                             Tuntikirjanpito.laskeSaldot(merkinnat);
+                            this.edit(newLine);
                         });
                 }
                 //this.tyhjenna();
@@ -158,6 +164,7 @@
                 this.lahtoaika = undefined;
                 this.lounaita = 1;
                 this.kirjaus = 7.5;
+                this.kommentti = undefined;
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
@@ -194,11 +201,11 @@
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
                 const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
                 const minuutteja = Math.abs(aikavaliMinuutteina);
-                const d = numeral(Math.trunc(minuutteja / (24*60))).format('0');
-                const h = numeral(Math.trunc(minuutteja / 60)).format('0');
+                const d = numeral(Math.trunc(minuutteja / (24 * 60))).format('0');
+                const h = numeral(Math.trunc(minuutteja / 60) - (d * 24)).format('00');
                 const m = numeral(Math.trunc(minuutteja % 60)).format('00');
                 const fullText = `${sign}${d}:${h}:${m}`;
-                return fullText.replace(/0:(\d+:\d+)/, '$1').replace(/0:00/, '-');
+                return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             edit(tyoaika) {
                 if (tyoaika.editing) {
@@ -211,6 +218,7 @@
                     this.lahtoaika = tyoaika.lahtoaika;
                     this.lounaita = tyoaika.lounaita;
                     this.kirjaus = tyoaika.kirjaus;
+                    this.kommentti = tyoaika.kommentti;
                 }
             },
             isEditing(tyoaika) {
@@ -226,6 +234,7 @@
                 lahtoaika: undefined,
                 lounaita: 1,
                 kirjaus: 7.5,
+                kommentti: undefined,
                 tyoajat: Tuntikirjanpito.get()
             }
         }
@@ -245,6 +254,36 @@
         text-align: left;
         margin: 5px 0;
         padding: 2px 15px;
+        height: 15px;
+    }
+
+    button {
+        height: 23px;
+        color: grey;
+        border: 1px solid lightgray;
+        background-color: white;
+        border-left: none;
+        margin-left: 1px;
+        padding: 3px;
+    }
+
+    button[type=submit], button[type=reset] {
+        border: none;
+        color: white;
+        padding: 2px 15px;
+        margin-right: 2px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+    }
+
+    button[type=submit] {
+        background-color: #4CAF50;
+    }
+
+    button[type=reset] {
+        background-color: #f44336;
     }
 
     input#date {
@@ -264,6 +303,10 @@
 
     input#kirjaus {
         width: 50px;
+        padding: 2px 0 2px 10px;
+    }
+
+    input#kommentti {
         padding: 2px 0 2px 10px;
     }
 
@@ -289,6 +332,18 @@
         border-top: 1px solid black;
         border-bottom: 1px solid black;
         padding: 10px 20px;
+    }
+
+    .lomake td {
+        white-space: nowrap;
+    }
+
+    .saldo {
+        text-align: right;
+    }
+
+    .kommentti {
+        text-align: left;
     }
 
 </style>
