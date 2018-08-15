@@ -51,12 +51,9 @@
                     </td>
                     <td  class="tuloJaLahtoajat">
                         <div v-if="isEditing(t)">
-                            <div v-if="vainYksiMerkinta(t)">
-                                <input type="text" class="tuloaika" maxlength="5" v-model="t.tuloaika"/>
-                                -
-                                <input type="text" class="lahtoaika" maxlength="5" v-model="t.lahtoaika"/>
-                            </div>
-                            <div v-else>it's complicated</div>
+                            <input type="text" class="tuloaika" maxlength="5" v-model="t.tuloaika"/>
+                            -
+                            <input type="text" class="lahtoaika" maxlength="5" v-model="t.lahtoaika"/>
                         </div>
                         <div v-else>
                             <div v-if="vainYksiMerkinta(t)">{{ t.tuloaika }} - {{ t.lahtoaika }}</div>
@@ -83,7 +80,7 @@
                             <button type="submit" v-if="tuloaika">&#x2713;</button>
                             <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
                         </div>
-                        <button class="edit "v-else v-on:click="edit(t)">EDIT</button>
+                        <button class="edit" v-on:click="edit(t)">EDIT</button>
                     </td>
                 </tr>
                 </tbody>
@@ -237,26 +234,18 @@
                 return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             edit(tyoaika) {
-                console.log(tyoaika);
-                if (!this.isEditing(tyoaika)) {
+                const selectedId = this.id;
+                const currentIndex = tyoaika.merkinnat.findIndex(e => e.id === selectedId);
+                const nextIndex = (currentIndex +1) % tyoaika.merkinnat.length;
+                const merkinta = tyoaika.merkinnat[nextIndex];
 
-                    const selectedId = this.id;
-                    const currentIndex = tyoaika.merkinnat.findIndex(e => e.id === selectedId);
-                    const nextIndex = (currentIndex +1) % tyoaika.merkinnat.length;
-
-
-
-                    console.log(tyoaika.merkinnat[0].id);
-                    this.id = tyoaika.merkinnat[0].id;
-                    this.date = formatUiDateFromDbString(tyoaika.merkinnat[0].date);
-                    this.tuloaika = tyoaika.merkinnat[0].tuloaika;
-                    this.lahtoaika = tyoaika.merkinnat[0].lahtoaika;
-                    this.lounaita = tyoaika.merkinnat[0].lounaita;
-                    this.kirjaus = tyoaika.merkinnat[0].kirjaus;
-                    this.kommentti = tyoaika.merkinnat[0].kommentti;
-                } else {
-                    console.log('oli jo auki')
-                }
+                this.id = merkinta.id;
+                this.date = formatUiDateFromDbString(merkinta.date);
+                this.tuloaika = merkinta.tuloaika;
+                this.lahtoaika = merkinta.lahtoaika;
+                this.lounaita = merkinta.lounaita;
+                this.kirjaus = merkinta.kirjaus;
+                this.kommentti = merkinta.kommentti;
             },
             isEditing(tyoaika) {
                 const id = this.id;
