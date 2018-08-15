@@ -48,6 +48,9 @@ function toNumber(value) {
 }
 
 function yhdistaPaivat(merkinnat) {
+    function sum(acc, n) {
+        return acc + n;
+    }
     return _.chain(merkinnat)
         .groupBy('date')
         .toPairs()
@@ -56,8 +59,24 @@ function yhdistaPaivat(merkinnat) {
             const minTuloaika = _.sortBy(merkinatKannassa, ['tuloaika'])[0].tuloaika;
             const maxLahtoaika = _.sortBy(merkinatKannassa, ['lahtoaika']).reverse()[0].lahtoaika;
             const tuloJaLahtoajat = merkinatKannassa.map(m => ({tuloaika: m.tuloaika, lahtoaika: m.lahtoaika}));
-            const kirjaus = merkinatKannassa.reduce((acc, merkinta) => acc + toNumber(merkinta.kirjaus), 0);
-            return { ...merkinatKannassa[0], kirjaus, tuloaika: minTuloaika, lahtoaika: maxLahtoaika, tuloJaLahtoajat }
+            const kirjaus = merkinatKannassa.map(m => m.kirjaus).reduce(sum, 0);
+            const lounaita = merkinatKannassa.map(m => m.lounaita).reduce(sum, 0);
+            const kommentti = _.chain(merkinatKannassa)
+                .map(m => m.kommentti)
+                .filter(k => k)
+                .uniq()
+                .map(k => k + ' ')
+                .reduce(sum, ' ')
+                .value();
+            return {
+                date: pair[0],
+                tuloaika: minTuloaika,
+                lahtoaika: maxLahtoaika,
+                kirjaus,
+                lounaita,
+                kommentti,
+                merkinnat: pair[1],
+                tuloJaLahtoajat }
         })
         .value();
 }

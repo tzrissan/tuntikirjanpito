@@ -5,8 +5,7 @@
             <table>
                 <thead>
                 <tr class="lomake">
-                    <td>{{ id }}</td>
-                    <td><input type="text" class="date" maxlength="10" v-model="date"/></td>
+                    <td colspan="2">{{ id}}<input type="text" class="date" maxlength="10" v-model="date"/></td>
                     <td colspan="2">
                         <input type="text" class="tuloaika" maxlength="5" v-model="tuloaika"/>
                         <button v-on:click="tulinJust()">ny</button>
@@ -29,8 +28,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>id</th>
-                    <th>pvm</th>
+                    <th colspan="2">pvm</th>
                     <th>tuloaika - lähtöaika</th>
                     <th>lounas</th>
                     <th>työaika</th>
@@ -44,12 +42,14 @@
                 </thead>
                 <tbody>
                 <tr v-for="t in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="t.id">
-                    <td v-on:click="edit(t)">{{ t.id }}</td>
-                    <td v-on:click="edit(t)">
-                        <input v-if="isEditing(t)" type="text" class="date" maxlength="10" v-model="date"/>
-                        <span v-else>{{ t.date | moment("dd D.M.YYYY") }}</span>
+                    <td  class="pvm">
+                        {{ t.date | moment("dd") }}
                     </td>
-                    <td v-on:click="edit(t)" class="tuloJaLahtoajat">
+                    <td  class="pvm">
+                        <input v-if="isEditing(t)" type="text" class="date" maxlength="10" v-model="date"/>
+                        <span v-else>{{ t.date | moment("D.M.YYYY") }}</span>
+                    </td>
+                    <td  class="tuloJaLahtoajat">
                         <div v-if="isEditing(t)">
                             <div v-if="vainYksiMerkinta(t)">
                                 <input type="text" class="tuloaika" maxlength="5" v-model="t.tuloaika"/>
@@ -65,24 +65,25 @@
                             </div>
                         </div>
                     </td>
-                    <td v-on:click="edit(t)">
+                    <td >
                         <input v-if="isEditing(t)" type="number" class="lounaita" v-model="lounaita" min="0"/>
                         <span v-else>{{ t.lounaita }}</span>
                     </td>
-                    <td v-on:click="edit(t)">{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
-                    <td v-on:click="edit(t)">
+                    <td >{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
+                    <td >
                         <input v-if="isEditing(t)" type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
                         <span v-else-if="t.kirjaus">{{ t.kirjaus }} h</span>
                     </td>
-                    <td v-on:click="edit(t)"><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
-                    <td v-on:click="edit(t)"><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
-                    <td v-on:click="edit(t)" class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
-                    <td v-on:click="edit(t)" class="kommentti">{{ t.kommentti }}</td>
+                    <td ><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
+                    <td ><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
+                    <td  class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
+                    <td  class="kommentti">{{ t.kommentti }}</td>
                     <td>
                         <div v-if="isEditing(t)">
                             <button type="submit" v-if="tuloaika">&#x2713;</button>
                             <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
                         </div>
+                        <button class="edit "v-else v-on:click="edit(t)">EDIT</button>
                     </td>
                 </tr>
                 </tbody>
@@ -236,18 +237,30 @@
                 return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             edit(tyoaika) {
+                console.log(tyoaika);
                 if (!this.isEditing(tyoaika)) {
-                    this.id = tyoaika.id;
-                    this.date = formatUiDateFromDbString(tyoaika.date);
-                    this.tuloaika = tyoaika.tuloaika;
-                    this.lahtoaika = tyoaika.lahtoaika;
-                    this.lounaita = tyoaika.lounaita;
-                    this.kirjaus = tyoaika.kirjaus;
-                    this.kommentti = tyoaika.kommentti;
+
+                    const selectedId = this.id;
+                    const currentIndex = tyoaika.merkinnat.findIndex(e => e.id === selectedId);
+                    const nextIndex = (currentIndex +1) % tyoaika.merkinnat.length;
+
+
+
+                    console.log(tyoaika.merkinnat[0].id);
+                    this.id = tyoaika.merkinnat[0].id;
+                    this.date = formatUiDateFromDbString(tyoaika.merkinnat[0].date);
+                    this.tuloaika = tyoaika.merkinnat[0].tuloaika;
+                    this.lahtoaika = tyoaika.merkinnat[0].lahtoaika;
+                    this.lounaita = tyoaika.merkinnat[0].lounaita;
+                    this.kirjaus = tyoaika.merkinnat[0].kirjaus;
+                    this.kommentti = tyoaika.merkinnat[0].kommentti;
+                } else {
+                    console.log('oli jo auki')
                 }
             },
             isEditing(tyoaika) {
-                return tyoaika.id === this.id;
+                const id = this.id;
+                return tyoaika.merkinnat.findIndex(e => e.id === id) >= 0
             },
             vainYksiMerkinta(tyoaika) {
                 return tyoaika.tuloJaLahtoajat.length === 1;
@@ -298,12 +311,13 @@
     button[type=submit], button[type=reset] {
         border: none;
         color: white;
-        padding: 2px 15px;
+        padding: 2px;
         margin-right: 2px;
         text-align: center;
         text-decoration: none;
         display: inline-block;
         font-size: 16px;
+        width: 45px;
     }
 
     button[type=submit] {
@@ -312,6 +326,11 @@
 
     button[type=reset] {
         background-color: #f44336;
+    }
+
+    button.edit {
+        border: 1px solid grey;
+        width: 45px;
     }
 
     input.date {
@@ -372,6 +391,11 @@
 
     .kommentti {
         text-align: left;
+    }
+
+    .pvm {
+        #text-align: left;
+        padding: 3px;
     }
 
     .tuloJaLahtoajat {
