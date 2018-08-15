@@ -6,24 +6,24 @@
                 <thead>
                 <tr class="lomake">
                     <td>{{ id }}</td>
-                    <td><input type="text" id="date" maxlength="10" v-model="date"/></td>
-                    <td colspan="3">
-                        <input type="text" id="tuloaika" maxlength="5" v-model="tuloaika"/>
+                    <td><input type="text" class="date" maxlength="10" v-model="date"/></td>
+                    <td colspan="2">
+                        <input type="text" class="tuloaika" maxlength="5" v-model="tuloaika"/>
                         <button v-on:click="tulinJust()">ny</button>
                         <button v-on:click="tulinYsilt()">9</button>
                         -
-                        <input type="text" id="lahtoaika" v-model="lahtoaika"/>
+                        <input type="text" class="lahtoaika" maxlength="5" v-model="lahtoaika"/>
                         <button v-on:click="meenIhanKohta()">ny</button>
                         <button v-on:click="meenViidelta()">5</button>
                     </td>
-                    <td><input type="number" id="lounaita" v-model="lounaita" min="0"/></td>
+                    <td><input type="number" class="lounaita" v-model="lounaita" min="0"/></td>
                     <td></td>
                     <td>
-                        <input type="number" id="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
+                        <input type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
                         <button v-on:click="normiTunnit()">7½</button>
                     </td>
-                    <td colspan="3"><input id="kommentti" type="text" v-model="kommentti"/></td>
-                    <td colspan="1">
+                    <td colspan="2"><input class="kommentti" type="text" v-model="kommentti"/></td>
+                    <td>
                         <button type="submit" v-if="tuloaika">&#x2713;</button>
                         <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
                     </td>
@@ -39,26 +39,51 @@
                     <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
                     <th>kommentti</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="t in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="t.id"
-                    v-on:click="edit(t)">
-                    <td>{{ t.id }}</td>
-                    <td>{{ t.date | moment("dd D.M.YYYY") }}</td>
-                    <td class="tuloJaLahtoajat">
-                        <div v-if="vainYksiMerkinta(t)">{{ t.tuloaika }} - {{ t.lahtoaika }}</div>
+                <tr v-for="t in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="t.id">
+                    <td v-on:click="edit(t)">{{ t.id }}</td>
+                    <td v-on:click="edit(t)">
+                        <input v-if="isEditing(t)" type="text" class="date" maxlength="10" v-model="date"/>
+                        <span v-else>{{ t.date | moment("dd D.M.YYYY") }}</span>
+                    </td>
+                    <td v-on:click="edit(t)" class="tuloJaLahtoajat">
+                        <div v-if="isEditing(t)">
+                            <div v-if="vainYksiMerkinta(t)">
+                                <input type="text" class="tuloaika" maxlength="5" v-model="t.tuloaika"/>
+                                -
+                                <input type="text" class="lahtoaika" maxlength="5" v-model="t.lahtoaika"/>
+                            </div>
+                            <div v-else>it's complicated</div>
+                        </div>
                         <div v-else>
-                            <span v-for="tl in t.tuloJaLahtoajat" v-bind:key="tl">{{ tl.tuloaika }} - {{ tl.lahtoaika }}<br></span>
+                            <div v-if="vainYksiMerkinta(t)">{{ t.tuloaika }} - {{ t.lahtoaika }}</div>
+                            <div v-else>
+                                <span v-for="tl in t.tuloJaLahtoajat" v-bind:key="tl.tuloaika+tl.lahtoaika">{{ tl.tuloaika }} - {{ tl.lahtoaika }}<br></span>
+                            </div>
                         </div>
                     </td>
-                    <td>{{ t.lounaita }}</td>
-                    <td>{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
-                    <td><span v-if="t.kirjaus">{{ t.kirjaus }} h</span></td>
-                    <td><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
-                    <td><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
-                    <td class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
-                    <td class="kommentti">{{ t.kommentti }}</td>
+                    <td v-on:click="edit(t)">
+                        <input v-if="isEditing(t)" type="number" class="lounaita" v-model="lounaita" min="0"/>
+                        <span v-else>{{ t.lounaita }}</span>
+                    </td>
+                    <td v-on:click="edit(t)">{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
+                    <td v-on:click="edit(t)">
+                        <input v-if="isEditing(t)" type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
+                        <span v-else-if="t.kirjaus">{{ t.kirjaus }} h</span>
+                    </td>
+                    <td v-on:click="edit(t)"><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
+                    <td v-on:click="edit(t)"><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
+                    <td v-on:click="edit(t)" class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
+                    <td v-on:click="edit(t)" class="kommentti">{{ t.kommentti }}</td>
+                    <td>
+                        <div v-if="isEditing(t)">
+                            <button type="submit" v-if="tuloaika">&#x2713;</button>
+                            <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
+                        </div>
+                    </td>
                 </tr>
                 </tbody>
             </table>
@@ -211,10 +236,7 @@
                 return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             edit(tyoaika) {
-                if (tyoaika.editing) {
-                    tyoaika.editing = false;
-                } else {
-                    tyoaika.editing = true;
+                if (!this.isEditing(tyoaika)) {
                     this.id = tyoaika.id;
                     this.date = formatUiDateFromDbString(tyoaika.date);
                     this.tuloaika = tyoaika.tuloaika;
@@ -225,7 +247,7 @@
                 }
             },
             isEditing(tyoaika) {
-                return tyoaika.editing ? 'editing' : '';
+                return tyoaika.id === this.id;
             },
             vainYksiMerkinta(tyoaika) {
                 return tyoaika.tuloJaLahtoajat.length === 1;
@@ -292,27 +314,27 @@
         background-color: #f44336;
     }
 
-    input#date {
+    input.date {
         width: 80px;
         padding: 2px 10px;
     }
 
-    input#tuloaika, input#lahtoaika {
+    input.tuloaika, input.lahtoaika {
         width: 50px;
         padding: 2px 10px;
     }
 
-    input#lounaita {
+    input.lounaita {
         width: 30px;
         padding: 2px 0 2px 10px;
     }
 
-    input#kirjaus {
+    input.kirjaus {
         width: 50px;
         padding: 2px 0 2px 10px;
     }
 
-    input#kommentti {
+    input.kommentti {
         padding: 2px 0 2px 10px;
     }
 
