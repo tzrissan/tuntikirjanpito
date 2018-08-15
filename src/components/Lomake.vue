@@ -31,9 +31,7 @@
                 <tr>
                     <th>id</th>
                     <th>pvm</th>
-                    <th>tuloaika</th>
-                    <th></th>
-                    <th>lähtöaika</th>
+                    <th>tuloaika - lähtöaika</th>
                     <th>lounas</th>
                     <th>työaika</th>
                     <th>kirjaus</th>
@@ -48,7 +46,12 @@
                     v-on:click="edit(t)">
                     <td>{{ t.id }}</td>
                     <td>{{ t.date | moment("dd D.M.YYYY") }}</td>
-                    <td>{{ t.tuloaika }}</td><td>-</td><td>{{ t.lahtoaika }}</td>
+                    <td class="tuloJaLahtoajat">
+                        <div v-if="vainYksiMerkinta(t)">{{ t.tuloaika }} - {{ t.lahtoaika }}</div>
+                        <div v-else>
+                            <span v-for="tl in t.tuloJaLahtoajat" v-bind:key="tl">{{ tl.tuloaika }} - {{ tl.lahtoaika }}<br></span>
+                        </div>
+                    </td>
                     <td>{{ t.lounaita }}</td>
                     <td>{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
                     <td><span v-if="t.kirjaus">{{ t.kirjaus }} h</span></td>
@@ -223,6 +226,9 @@
             },
             isEditing(tyoaika) {
                 return tyoaika.editing ? 'editing' : '';
+            },
+            vainYksiMerkinta(tyoaika) {
+                return tyoaika.tuloJaLahtoajat.length === 1;
             }
         },
         data() {
@@ -344,6 +350,10 @@
 
     .kommentti {
         text-align: left;
+    }
+
+    .tuloJaLahtoajat {
+        white-space: nowrap;
     }
 
 </style>
