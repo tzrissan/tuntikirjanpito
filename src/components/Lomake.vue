@@ -57,7 +57,7 @@
                     </td>
                     <td>
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ tyoaika(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, merkinta.kirjaus) }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ tyoaika(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita) }} <br></span>
                         </small>
                         <small v-else>{{ paiva.tyoaika }}</small>
                         </td>

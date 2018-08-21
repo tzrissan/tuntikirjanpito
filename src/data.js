@@ -17,6 +17,7 @@ export function aikavaliMinuutteina(alku, loppu, lounaita=0) {
 }
 
 export const PROD = !window.location.href.match(/localhost/);
+const v2018alkusaldo = (18.0*60);
 
 
 // IDEA replace
@@ -32,7 +33,7 @@ function laskeSaldot(merkinnat) {
     _.sortBy(merkinnat, ['date', 'tuloaika']).forEach(function(merkinta, index, merkinnat) {
         merkinta.saldomuutos = (_.isNumber(merkinta.kirjaus) ? (merkinta.kirjaus * 60) : 0) - (7.5 * 60);
         if (index === 0) {
-            const v2018alkusaldo = (18*60);
+
             merkinta.saldo = v2018alkusaldo + (_.isNaN(merkinta.saldomuutos) ? 0: merkinta.saldomuutos);
         } else {
             merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
@@ -48,6 +49,11 @@ function toNumber(value) {
     }
 }
 
+function laskeSaldomuutos(pvm, kirjaus=0) {
+    //FIXME: Nyt oletetaan aina olevan arkipäivä. Ota la/su/pyhät yms huomioon
+    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? (kirjaus * 60) : 0) - (7.5 * 60);
+}
+
 function yhdistaPaivat(merkinnat) {
     function sum(acc, n) {
         return acc + n;
@@ -57,9 +63,9 @@ function yhdistaPaivat(merkinnat) {
         .toPairs()
         .map(pair => {
             const merkinatKannassa = pair[1];
-            const tuloJaLahtoajat = merkinatKannassa.map(m => ({tuloaika: m.tuloaika, lahtoaika: m.lahtoaika}));
             const kirjaus = merkinatKannassa.map(m => m.kirjaus).reduce(sum, 0);
             const lounaita = merkinatKannassa.map(m => m.lounaita).reduce(sum, 0);
+            const saldomuutos = laskeSaldomuutos(pair[0], kirjaus);
             const kommentti = _.chain(merkinatKannassa)
                 .map(m => m.kommentti)
                 .filter(k => k)
@@ -70,10 +76,16 @@ function yhdistaPaivat(merkinnat) {
             return {
                 date: pair[0],
                 kirjaus,
+                saldomuutos,
                 lounaita,
                 kommentti,
-                merkinnat: pair[1],
-                tuloJaLahtoajat }
+                merkinnat: pair[1]
+            }
+        })
+        .sortBy('date')
+        .map((paiva, idx, all) => {
+            paiva.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
+            return paiva;
         })
         .value();
 }
@@ -221,7 +233,7 @@ if (!PROD) {
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:35", "kirjaus": 7.0, "date": "2018-08-15", "lounaita": 1, "id": 148},
             {"lahtoaika": null, "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-16", "lounaita": 1, "id": 149}
         ];
-    laskeSaldot(merkinnat);
+    //laskeSaldot(merkinnat);
     data.merkinnat = merkinnat;
     data.paivat = yhdistaPaivat(merkinnat);
 }
@@ -230,7 +242,7 @@ if (!PROD) {
 axios.create().get('/tunnit.data')
     .then((response) => {
         const merkinnat = response.data;
-        laskeSaldot(merkinnat);
+        //laskeSaldot(merkinnat);
         data.merkinnat = merkinnat;
         data.paivat = yhdistaPaivat(merkinnat);
     });
