@@ -18,7 +18,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="paiva in laskevassaJarjestyksessa(tyoajat.paivat)" v-bind:key="paiva.id">
+                <tr v-for="paiva in laskevassaJarjestyksessa(tyoajat.paivat)" v-bind:key="paiva.date">
                     <td>
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
@@ -26,10 +26,6 @@
                             <button type="button" class="delete" v-on:click="tyhjenna()">&#x1F5D1;</button>
                         </div>
                         <button v-else type="button" class="edit" v-on:click="edit(paiva)">EDIT</button>
-
-                        <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
-                            <span v-if="merkinta.saving">SHAVING</span>
-                        </div>
                     </td>
                     <td  class="pvm">
                         {{ paiva.date | moment("dd") }}
@@ -45,6 +41,7 @@
                                 <input type="text" class="lahtoaika" minlength="3" maxlength="5" v-model="merkinta.lahtoaika"/>
                             </span>
                             <span v-else>{{ merkinta.tuloaika }} - {{ merkinta.lahtoaika }}<br></span>
+                            <span v-if="merkinta.saving">saving in progress</span>
                         </div>
                     </td>
                     <td>
@@ -151,7 +148,6 @@
         methods: {
             tallenna(paiva) {
                 paiva.merkinnat.forEach(merkinta => {
-                    merkinta.date = formatDbDateFromUiString(merkinta.date);
                     merkinta.tuloaika = formatTimeFromString(merkinta.tuloaika);
                     merkinta.lahtoaika = formatTimeFromString(merkinta.lahtoaika);
                     merkinta.lounaita = parseInt(merkinta.lounaita);
@@ -159,6 +155,7 @@
                     merkinta.saving = true;
                     axios.put('/tunnit.data', merkinta).then(
                         () => {
+                            console.log('save ok ' + merkinta.id);
                             merkinta.saving = undefined;
                             this.tyhjenna();
                         }
