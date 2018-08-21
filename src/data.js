@@ -24,7 +24,8 @@ export const PROD = !window.location.href.match(/localhost/);
 // { date: '$1.2018', tuloaika: '$2', lahtoaika: '$3', lounaat: $4 },
 
 const data = {
-    merkinnat: []
+    merkinnat: [],
+    paivat: []
 };
 
 function laskeSaldot(merkinnat) {
@@ -56,8 +57,6 @@ function yhdistaPaivat(merkinnat) {
         .toPairs()
         .map(pair => {
             const merkinatKannassa = pair[1];
-            const minTuloaika = _.sortBy(merkinatKannassa, ['tuloaika'])[0].tuloaika;
-            const maxLahtoaika = _.sortBy(merkinatKannassa, ['lahtoaika']).reverse()[0].lahtoaika;
             const tuloJaLahtoajat = merkinatKannassa.map(m => ({tuloaika: m.tuloaika, lahtoaika: m.lahtoaika}));
             const kirjaus = merkinatKannassa.map(m => m.kirjaus).reduce(sum, 0);
             const lounaita = merkinatKannassa.map(m => m.lounaita).reduce(sum, 0);
@@ -70,8 +69,6 @@ function yhdistaPaivat(merkinnat) {
                 .value();
             return {
                 date: pair[0],
-                tuloaika: minTuloaika,
-                lahtoaika: maxLahtoaika,
                 kirjaus,
                 lounaita,
                 kommentti,
@@ -82,7 +79,7 @@ function yhdistaPaivat(merkinnat) {
 }
 
 if (!PROD) {
-    const merkinnat = yhdistaPaivat([
+    const merkinnat = [
             {"lahtoaika": "16:50", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-01-02", "lounaita": 1, "id": 159},
             {"lahtoaika": "17:30", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-01-03", "lounaita": 2, "id": 160},
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-01-04", "lounaita": 1, "id": 161},
@@ -223,24 +220,26 @@ if (!PROD) {
             {"lahtoaika": "18:10", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-08-14", "lounaita": 1, "id": 24},
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:35", "kirjaus": 7.0, "date": "2018-08-15", "lounaita": 1, "id": 148},
             {"lahtoaika": null, "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-16", "lounaita": 1, "id": 149}
-            ]);
+        ];
     laskeSaldot(merkinnat);
     data.merkinnat = merkinnat;
+    data.paivat = yhdistaPaivat(merkinnat);
 }
 
 
 axios.create().get('/tunnit.data')
     .then((response) => {
-        const merkinnat = yhdistaPaivat(response.data);
+        const merkinnat = response.data;
         laskeSaldot(merkinnat);
         data.merkinnat = merkinnat;
+        data.paivat = yhdistaPaivat(merkinnat);
     });
 
 const Tuntikirjanpito = {
     get() {
         return data;
     },
-    laskeSaldot(merkinnat) {
+    laskeSaldot(merkinnat = data.merkinnat) {
         laskeSaldot(merkinnat);
     }
 };

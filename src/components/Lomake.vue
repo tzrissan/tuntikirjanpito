@@ -1,33 +1,11 @@
 <template>
     <div class="hello">
         <h1>{{ today | moment("D.M.YYYY") }}</h1>
-        <form @submit="tallenna">
+        <form>
             <table>
                 <thead>
-                <tr class="lomake">
-                    <td colspan="2">{{ id}}<input type="text" class="date" maxlength="10" v-model="date"/></td>
-                    <td colspan="2">
-                        <input type="text" class="tuloaika" maxlength="5" v-model="tuloaika"/>
-                        <button v-on:click="tulinJust()">ny</button>
-                        <button v-on:click="tulinYsilt()">9</button>
-                        -
-                        <input type="text" class="lahtoaika" maxlength="5" v-model="lahtoaika"/>
-                        <button v-on:click="meenIhanKohta()">ny</button>
-                        <button v-on:click="meenViidelta()">5</button>
-                    </td>
-                    <td><input type="number" class="lounaita" v-model="lounaita" min="0"/></td>
-                    <td></td>
-                    <td>
-                        <input type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
-                        <button v-on:click="normiTunnit()">7½</button>
-                    </td>
-                    <td colspan="2"><input class="kommentti" type="text" v-model="kommentti"/></td>
-                    <td>
-                        <button type="submit" v-if="tuloaika">&#x2713;</button>
-                        <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
-                    </td>
-                </tr>
                 <tr>
+                    <th>{{ editId }}</th>
                     <th colspan="2">pvm</th>
                     <th>tuloaika - lähtöaika</th>
                     <th>lounas</th>
@@ -37,50 +15,74 @@
                     <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
                     <th>kommentti</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="t in laskevassaJarjestyksessa(tyoajat.merkinnat)" v-bind:key="t.id">
-                    <td  class="pvm">
-                        {{ t.date | moment("dd") }}
+                <tr v-for="paiva in laskevassaJarjestyksessa(tyoajat.paivat)" v-bind:key="paiva.id">
+                    <td>
+                        <div v-if="isEditing(paiva)">
+                            <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
+                            <button type="button" class="cancel" v-on:click="tyhjenna()">&#x2715;</button>
+                            <button type="button" class="delete" v-on:click="tyhjenna()">&#x1F5D1;</button>
+                        </div>
+                        <button v-else type="button" class="edit" v-on:click="edit(paiva)">EDIT</button>
+
+                        <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
+                            <span v-if="merkinta.saving">SHAVING</span>
+                        </div>
                     </td>
                     <td  class="pvm">
-                        <input v-if="isEditing(t)" type="text" class="date" maxlength="10" v-model="date"/>
-                        <span v-else>{{ t.date | moment("D.M.YYYY") }}</span>
+                        {{ paiva.date | moment("dd") }}
+                    </td>
+                    <td  class="pvm">
+                        {{ paiva.date | moment("D.M.YYYY") }}
                     </td>
                     <td  class="tuloJaLahtoajat">
-                        <div v-if="isEditing(t)">
-                            <input type="text" class="tuloaika" maxlength="5" v-model="t.tuloaika"/>
-                            -
-                            <input type="text" class="lahtoaika" maxlength="5" v-model="t.lahtoaika"/>
+                        <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
+                            <span v-if="isEditing(paiva)">
+                                <input type="text" class="tuloaika" minlength="3" maxlength="5" v-model="merkinta.tuloaika"/>
+                                -
+                                <input type="text" class="lahtoaika" minlength="3" maxlength="5" v-model="merkinta.lahtoaika"/>
+                            </span>
+                            <span v-else>{{ merkinta.tuloaika }} - {{ merkinta.lahtoaika }}<br></span>
                         </div>
-                        <div v-else>
-                            <div v-if="vainYksiMerkinta(t)">{{ t.tuloaika }} - {{ t.lahtoaika }}</div>
-                            <div v-else>
-                                <span v-for="tl in t.tuloJaLahtoajat" v-bind:key="tl.tuloaika+tl.lahtoaika">{{ tl.tuloaika }} - {{ tl.lahtoaika }}<br></span>
+                    </td>
+                    <td>
+                        <div v-if="isEditing(paiva)">
+                            <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
+                                <input type="number" class="lounaita" v-model="merkinta.lounaita" min="0"/>
                             </div>
                         </div>
+                        <span v-else>{{ paiva.lounaita }}</span>
                     </td>
-                    <td >
-                        <input v-if="isEditing(t)" type="number" class="lounaita" v-model="lounaita" min="0"/>
-                        <span v-else>{{ t.lounaita }}</span>
-                    </td>
-                    <td >{{ tyoaika(t.tuloaika, t.lahtoaika, t.lounaita) }}</td>
-                    <td >
-                        <input v-if="isEditing(t)" type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
-                        <span v-else-if="t.kirjaus">{{ t.kirjaus }} h</span>
-                    </td>
-                    <td ><small>{{ kirjausvirhe(t.tuloaika, t.lahtoaika, t.lounaita, t.kirjaus) }}</small></td>
-                    <td ><small>{{ aikavali2UiStr(t.saldomuutos) }}</small></td>
-                    <td  class="saldo">{{ aikavali2UiStr(t.saldo) }}</td>
-                    <td  class="kommentti">{{ t.kommentti }}</td>
                     <td>
-                        <div v-if="isEditing(t)">
-                            <button type="submit" v-if="tuloaika">&#x2713;</button>
-                            <button type="reset" v-if="tuloaika" v-on:click="tyhjenna()">&#x2715;</button>
+                        <small v-if="isEditing(paiva)">
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ tyoaika(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, merkinta.kirjaus) }} <br></span>
+                        </small>
+                        <small v-else>{{ paiva.tyoaika }}</small>
+                        </td>
+                    <td>
+                        <div v-if="isEditing(paiva)">
+                            <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
+                                <input type="number" class="kirjaus" v-model="merkinta.kirjaus" min="0" step="0.25"/>
+                            </div>
                         </div>
-                        <button class="edit" v-on:click="edit(t)">EDIT</button>
+                        <span v-else>{{ paiva.kirjaus }} h</span>
+                    </td>
+                    <td>
+                        <small v-if="isEditing(paiva)">
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ kirjausvirhe(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, merkinta.kirjaus) }} <br></span>
+                        </small>
+                        <small v-else>{{ paiva.kirjausvirhe }}</small>
+                    </td>
+                    <td><small>{{ aikavali2UiStr(paiva.saldomuutos) }}</small></td>
+                    <td class="saldo">{{ aikavali2UiStr(paiva.saldo) }}</td>
+                    <td class="kommentti">
+                        <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
+                            <input v-if="isEditing(paiva)" class="kommentti" type="text" v-model="merkinta.kommentti" min="0" step="0.25"/>
+                            <span v-else>{{ merkinta.kommentti }}</span>
+                        </div>
+
                     </td>
                 </tr>
                 </tbody>
@@ -128,7 +130,6 @@
         return `${year}-${month}-${day}`;
     }
 
-
     function formatUiDateFromDbString(date) {
         const day = numeral(date.replace(DB_DATE_REGEX, '$3')).format('00');
         const month = numeral(date.replace(DB_DATE_REGEX, '$2')).format('00');
@@ -148,67 +149,25 @@
         name: 'Lomake',
         props: {},
         methods: {
-            tallenna(e) {
-                e.preventDefault();
-                if (this.id && this.tyoajat.merkinnat.find(t => t.id === this.id)) {
-                    const update = this.tyoajat.merkinnat.find(t => t.id === this.id);
-                    update.date = formatDbDateFromUiString(this.date);
-                    update.tuloaika = formatTimeFromString(this.tuloaika);
-                    update.lahtoaika = formatTimeFromString(this.lahtoaika);
-                    update.lounaita = parseInt(this.lounaita);
-                    update.kirjaus = parseFloat(this.kirjaus);
-                    update.kommentti = this.kommentti;
-                    const merkinnat = this.tyoajat.merkinnat;
-                    axios.put('/tunnit.data', update)
-                        .then(function () {
-                            Tuntikirjanpito.laskeSaldot(merkinnat);
-                        });
-                } else {
-                    const newLine = {
-                        date: formatDbDateFromUiString(this.date),
-                        tuloaika: formatTimeFromString(this.tuloaika),
-                        lahtoaika: formatTimeFromString(this.lahtoaika),
-                        lounaita: parseInt(this.lounaita),
-                        kirjaus: parseFloat(this.kirjaus),
-                        kommentti: this.kommentti
-                    };
-                    const merkinnat = this.tyoajat.merkinnat;
-                    axios.post('/tunnit.data', newLine)
-                        .then(function (response) {
-                            newLine.id = response.data;
-                            merkinnat.push(newLine);
-                            Tuntikirjanpito.laskeSaldot(merkinnat);
-                            this.edit(newLine);
-                        });
-                }
-                //this.tyhjenna();
-            },
-            tyhjenna() {
-                this.id = undefined;
-                this.date = tanaan();
-                this.tuloaika = undefined;
-                this.lahtoaika = undefined;
-                this.lounaita = 1;
-                this.kirjaus = 7.5;
-                this.kommentti = undefined;
+            tallenna(paiva) {
+                paiva.merkinnat.forEach(merkinta => {
+                    merkinta.date = formatDbDateFromUiString(merkinta.date);
+                    merkinta.tuloaika = formatTimeFromString(merkinta.tuloaika);
+                    merkinta.lahtoaika = formatTimeFromString(merkinta.lahtoaika);
+                    merkinta.lounaita = parseInt(merkinta.lounaita);
+                    merkinta.kirjaus = parseFloat(merkinta.kirjaus);
+                    merkinta.saving = true;
+                    axios.put('/tunnit.data', merkinta).then(
+                        () => {
+                            merkinta.saving = undefined;
+                            this.tyhjenna();
+                        }
+                    )
+                });
+
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
-            },
-            tulinJust() {
-                this.tuloaika = nyt()
-            },
-            tulinYsilt() {
-                this.tuloaika = '9:00';
-            },
-            meenIhanKohta() {
-                this.lahtoaika = nyt()
-            },
-            meenViidelta() {
-                this.lahtoaika = '17:00';
-            },
-            normiTunnit() {
-                this.kirjaus = 7.5;
             },
             tyoaika(alku, loppu, lounaita) {
                 if (!alku || !loppu) {
@@ -218,9 +177,10 @@
                 }
             },
             kirjausvirhe(alku, loppu, lounaita, kirjaus) {
-                if (!alku || !loppu || !kirjaus) {
+                if (!alku || !loppu) {
                     return undefined;
                 } else {
+                    if (!kirjaus) kirjaus = 0;
                     return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita) - (kirjaus*60));
                 }
             },
@@ -233,39 +193,21 @@
                 const fullText = `${sign}${d}:${h}:${m}`;
                 return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
+            tyhjenna() {
+                this.editId = undefined;
+            },
             edit(tyoaika) {
-                const selectedId = this.id;
-                const currentIndex = tyoaika.merkinnat.findIndex(e => e.id === selectedId);
-                const nextIndex = (currentIndex +1) % tyoaika.merkinnat.length;
-                const merkinta = tyoaika.merkinnat[nextIndex];
-
-                this.id = merkinta.id;
-                this.date = formatUiDateFromDbString(merkinta.date);
-                this.tuloaika = merkinta.tuloaika;
-                this.lahtoaika = merkinta.lahtoaika;
-                this.lounaita = merkinta.lounaita;
-                this.kirjaus = merkinta.kirjaus;
-                this.kommentti = merkinta.kommentti;
+                this.editId = tyoaika.date;
             },
             isEditing(tyoaika) {
-                const id = this.id;
-                return tyoaika.merkinnat.findIndex(e => e.id === id) >= 0
-            },
-            vainYksiMerkinta(tyoaika) {
-                return tyoaika.tuloJaLahtoajat.length === 1;
+                return this.editId === tyoaika.date;
             }
         },
         data() {
             return {
-                id: undefined,
-                today: new Date(),
-                date: tanaan(),
-                tuloaika: undefined,
-                lahtoaika: undefined,
-                lounaita: 1,
-                kirjaus: 7.5,
-                kommentti: undefined,
-                tyoajat: Tuntikirjanpito.get()
+                editId: undefined,
+                tyoajat: Tuntikirjanpito.get(),
+                today: new Date()
             }
         }
     }
@@ -297,7 +239,7 @@
         padding: 3px;
     }
 
-    button[type=submit], button[type=reset] {
+    button.submit, button.cancel, button.delete {
         border: none;
         color: white;
         padding: 2px;
@@ -309,11 +251,21 @@
         width: 45px;
     }
 
-    button[type=submit] {
+    button.submit {
         background-color: #4CAF50;
     }
 
-    button[type=reset] {
+    button.cancel {
+        background-color: lightgrey;
+    }
+
+    button.delete {
+        color: #f44336;
+        background-color: white;
+    }
+
+    button.delete:hover {
+        color: white;
         background-color: #f44336;
     }
 
@@ -380,6 +332,7 @@
 
     .kommentti {
         text-align: left;
+        width: 98%;
     }
 
     .pvm {
