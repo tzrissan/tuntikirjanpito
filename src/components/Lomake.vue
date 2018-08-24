@@ -54,9 +54,9 @@
                     </td>
                     <td>
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ tyoaika(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita) }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ aikavali2UiStr(merkinta.tyoaika) }} <br></span>
                         </small>
-                        <small v-else>{{ paiva.tyoaika }}</small>
+                        <small v-else>{{ aikavali2UiStr(paiva.tyoaika) }}</small>
                         </td>
                     <td>
                         <div v-if="isEditing(paiva)">
@@ -68,9 +68,9 @@
                     </td>
                     <td>
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ kirjausvirhe(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, merkinta.kirjaus) }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ kirjausvirhe(merkinta) }} <br></span>
                         </small>
-                        <small v-else>{{ paiva.kirjausvirhe }}</small>
+                        <small v-else>{{ kirjausvirhe(paiva) }}</small>
                     </td>
                     <td><small>{{ aikavali2UiStr(paiva.saldomuutos) }}</small></td>
                     <td class="saldo">{{ aikavali2UiStr(paiva.saldo) }}</td>
@@ -155,31 +155,17 @@
                     merkinta.saving = true;
                     axios.put('/tunnit.data', merkinta).then(
                         () => {
-                            console.log('save ok ' + merkinta.id);
                             merkinta.saving = undefined;
                             this.tyhjenna();
                         }
                     )
                 });
-
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
             },
-            tyoaika(alku, loppu, lounaita) {
-                if (!alku || !loppu) {
-                    return undefined;
-                } else {
-                    return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita));
-                }
-            },
-            kirjausvirhe(alku, loppu, lounaita, kirjaus) {
-                if (!alku || !loppu) {
-                    return undefined;
-                } else {
-                    if (!kirjaus) kirjaus = 0;
-                    return this.aikavali2UiStr(aikavaliMinuutteina(alku, loppu, lounaita) - (kirjaus*60));
-                }
+            kirjausvirhe(merkinta) {
+                return this.aikavali2UiStr(merkinta.tyoaika - (merkinta.kirjaus*60));
             },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
                 const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');

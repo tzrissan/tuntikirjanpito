@@ -61,7 +61,7 @@
                     .then(function (response) {
                         newLine.id = response.data;
                         merkinnat.push(newLine);
-                        Tuntikirjanpito.laskeSaldot(merkinnat);
+                        //Tuntikirjanpito.laskeSaldot(merkinnat);
                         this.edit(newLine);
                     });
             },

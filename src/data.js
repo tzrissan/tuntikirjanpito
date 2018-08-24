@@ -5,9 +5,9 @@ export const TIME_REGEX = /(\d\d?).(\d\d?)/;
 export const UI_DATE_REGEX = /(\d\d?).(\d\d?).(\d{4})/;
 export const DB_DATE_REGEX = /(\d{4}).(\d{2}).(\d{2})/;
 
-export function aikavaliMinuutteina(alku, loppu, lounaita=0) {
+export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-') {
     if (!alku || !loppu) {
-        return "-";
+        return oletusarvo;
     }
     const alkuH = parseInt(alku.replace(TIME_REGEX, '$1'));
     const alkuM = parseInt(alku.replace(TIME_REGEX, '$2'));
@@ -29,16 +29,10 @@ const data = {
     paivat: []
 };
 
-function laskeSaldot(merkinnat) {
-    _.sortBy(merkinnat, ['date', 'tuloaika']).forEach(function(merkinta, index, merkinnat) {
-        merkinta.saldomuutos = (_.isNumber(merkinta.kirjaus) ? (merkinta.kirjaus * 60) : 0) - (7.5 * 60);
-        if (index === 0) {
-
-            merkinta.saldo = v2018alkusaldo + (_.isNaN(merkinta.saldomuutos) ? 0: merkinta.saldomuutos);
-        } else {
-            merkinta.saldo = merkinnat[index - 1].saldo + (_.isNaN(merkinta.saldomuutos) ? 0 : merkinta.saldomuutos);
-        }
-    });
+function laskeMerkintojenMeta(merkinnat) {
+    merkinnat.forEach(m => {
+        m.tyoaika = aikavaliMinuutteina(m.tuloaika, m.lahtoaika, m.lounaita, 0);
+    })
 }
 
 function toNumber(value) {
@@ -55,36 +49,32 @@ function laskeSaldomuutos(pvm, kirjaus=0) {
 }
 
 function yhdistaPaivat(merkinnat) {
+    return laskePaivienMeta(
+        _.chain(merkinnat)
+            .groupBy('date')
+            .toPairs()
+            .map(pair => {
+                return {
+                    date: pair[0],
+                    merkinnat: pair[1]
+                }
+            })
+    );
+
+}
+
+function laskePaivienMeta(paivat) {
     function sum(acc, n) {
         return acc + n;
     }
-    return _.chain(merkinnat)
-        .groupBy('date')
-        .toPairs()
-        .map(pair => {
-            const merkinatKannassa = pair[1];
-            const kirjaus = merkinatKannassa.map(m => m.kirjaus).reduce(sum, 0);
-            const lounaita = merkinatKannassa.map(m => m.lounaita).reduce(sum, 0);
-            const saldomuutos = laskeSaldomuutos(pair[0], kirjaus);
-            const kommentti = _.chain(merkinatKannassa)
-                .map(m => m.kommentti)
-                .filter(k => k)
-                .uniq()
-                .map(k => k + ' ')
-                .reduce(sum, ' ')
-                .value();
-            return {
-                date: pair[0],
-                kirjaus,
-                saldomuutos,
-                lounaita,
-                kommentti,
-                merkinnat: pair[1]
-            }
-        })
+    return _.chain(paivat)
         .sortBy('date')
         .map((paiva, idx, all) => {
+            paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
+            paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
+            paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.kirjaus);
             paiva.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
+            paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
             return paiva;
         })
         .value();
@@ -233,8 +223,7 @@ if (!PROD) {
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:35", "kirjaus": 7.0, "date": "2018-08-15", "lounaita": 1, "id": 148},
             {"lahtoaika": null, "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-16", "lounaita": 1, "id": 149}
         ];
-    //laskeSaldot(merkinnat);
-    data.merkinnat = merkinnat;
+    data.merkinnat = laskeMerkintojenMeta(merkinnat);
     data.paivat = yhdistaPaivat(merkinnat);
 }
 
@@ -242,17 +231,13 @@ if (!PROD) {
 axios.create().get('/tunnit.data')
     .then((response) => {
         const merkinnat = response.data;
-        //laskeSaldot(merkinnat);
-        data.merkinnat = merkinnat;
+        data.merkinnat = laskeMerkintojenMeta(merkinnat);
         data.paivat = yhdistaPaivat(merkinnat);
     });
 
 const Tuntikirjanpito = {
     get() {
         return data;
-    },
-    laskeSaldot(merkinnat = data.merkinnat) {
-        laskeSaldot(merkinnat);
     }
 };
 
