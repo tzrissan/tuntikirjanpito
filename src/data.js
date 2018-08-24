@@ -1,29 +1,10 @@
 import axios from 'axios';
 import _ from 'lodash';
-
-export const TIME_REGEX = /(\d\d?).(\d\d?)/;
-export const UI_DATE_REGEX = /(\d\d?).(\d\d?).(\d{4})/;
-export const DB_DATE_REGEX = /(\d{4}).(\d{2}).(\d{2})/;
-
-export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-') {
-    if (!alku || !loppu) {
-        return oletusarvo;
-    }
-    const alkuH = parseInt(alku.replace(TIME_REGEX, '$1'));
-    const alkuM = parseInt(alku.replace(TIME_REGEX, '$2'));
-    const loppuH = parseInt(loppu.replace(TIME_REGEX, '$1'));
-    const loppuM = parseInt(loppu.replace(TIME_REGEX, '$2'));
-    return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
-}
+import { aikavaliMinuutteina } from './date-time-util';
 
 export const PROD = !window.location.href.match(/localhost/);
 const v2018alkusaldo = (18.0*60);
 const v2018alkuvirhe = 0;
-
-
-// IDEA replace
-// (\d{1,2}\.\d{1,2}\.)\s*[a-zA-Z\s]*(\d{1,2}:\d\d)[\s-]*(\d{1,2}:\d\d).*(\d)
-// { date: '$1.2018', tuloaika: '$2', lahtoaika: '$3', lounaat: $4 },
 
 const data = {
     merkinnat: [],
@@ -34,15 +15,8 @@ function laskeMerkintojenMeta(merkinnat) {
     merkinnat.forEach(m => {
         m.tyoaika = aikavaliMinuutteina(m.tuloaika, m.lahtoaika, m.lounaita, 0);
         m.kirjausvirhe = m.tyoaika - (m.kirjaus * 60);
-    })
-}
-
-function toNumber(value) {
-    if (_.isNumber(value) && !_.isNaN(value)) {
-        return value;
-    } else {
-        return 0;
-    }
+    });
+    return merkinnat;
 }
 
 function laskeSaldomuutos(pvm, kirjaus=0) {
@@ -58,7 +32,7 @@ function yhdistaPaivat(merkinnat) {
             .map(pair => {
                 return {
                     date: pair[0],
-                    merkinnat: pair[1]
+                    merkinnat: _.sortBy(pair[1], ['tuloaika','lahtoaika'])
                 }
             })
     );
@@ -243,6 +217,10 @@ axios.create().get('/tunnit.data')
 const Tuntikirjanpito = {
     get() {
         return data;
+    },
+    laskeUudestaan() {
+        data.merkinnat = laskeMerkintojenMeta(data.merkinnat);
+        data.paivat = yhdistaPaivat(data.merkinnat);
     }
 };
 
