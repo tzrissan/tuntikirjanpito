@@ -12,7 +12,6 @@
                     <th>työaika</th>
                     <th>kirjaus</th>
                     <th><small>todellisuus<br>- kirjaus</small></th>
-                    <th><small>saldo<br>&Delta;</small></th>
                     <th>saldo</th>
                     <th>kommentti</th>
                 </tr>
@@ -66,14 +65,17 @@
                         </div>
                         <span v-else>{{ paiva.kirjaus }} h</span>
                     </td>
-                    <td>
+                    <td class="kirjausvirhe">
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ kirjausvirhe(merkinta) }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">({{ aikavali2UiStr(merkinta.kirjausvirhe) }})<br></span>
                         </small>
-                        <small v-else>{{ kirjausvirhe(paiva) }}</small>
+                        <span v-else>{{ aikavali2UiStr(paiva.kirjausvirhe) }} <small v-if="paiva.kirjausvirheenmuutos">({{ aikavali2UiStr(paiva.kirjausvirheenmuutos) }})</small></span>
                     </td>
-                    <td><small>{{ aikavali2UiStr(paiva.saldomuutos) }}</small></td>
-                    <td class="saldo">{{ aikavali2UiStr(paiva.saldo) }}</td>
+                    <td class="saldo">
+                        <span v-if="isEditing(paiva)"></span>
+                        <span v-else>{{ aikavali2UiStr(paiva.saldo) }}</span>
+                        <small v-if="paiva.saldomuutos">({{ aikavali2UiStr(paiva.saldomuutos) }})</small>
+                    </td>
                     <td class="kommentti">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
                             <input v-if="isEditing(paiva)" class="kommentti" type="text" v-model="merkinta.kommentti" min="0" step="0.25"/>
@@ -163,9 +165,6 @@
             },
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
-            },
-            kirjausvirhe(merkinta) {
-                return this.aikavali2UiStr(merkinta.tyoaika - (merkinta.kirjaus*60));
             },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
                 const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
