@@ -1,16 +1,40 @@
 <template>
     <div id="app">
-        <Paivat/>
+        <h1>{{ today | moment("D.M.YYYY") }}</h1>
+        <div class="tabs">
+            <div class="tab"
+                 v-bind:class="{ active: selectedTab === 'Päivät'}"
+                 @click="selectedTab='Päivät'">Päivät</div>
+            <div class="tab"
+                 v-bind:class="{ active: selectedTab === 'Viikot'}"
+                 @click="selectedTab='Viikot'">Viikot</div>
+            <div class="tab"
+                 v-bind:class="{ active: selectedTab === 'Käppyrät'}"
+                 @click="selectedTab='Käppyrät'">Käppyrät</div>
+        </div>
+        <div class="tab-content">
+            <Paivat v-if="selectedTab==='Päivät'"/>
+            <Viikot v-if="selectedTab==='Viikot'"/>
+            <Kappyrat v-if="selectedTab==='Käppyrät'"/>
+        </div>
     </div>
 </template>
 
 <script>
     import Paivat from './components/Paivat.vue'
+    import Viikot from './components/Viikot.vue'
+    import Kappyrat from './components/Kappyrat.vue'
 
     export default {
         name: 'app',
         components: {
-            Paivat
+            Paivat, Viikot, Kappyrat
+        },
+        data() {
+            return {
+                today: new Date(),
+                selectedTab: 'Päivät'
+            }
         }
     }
 </script>
@@ -23,5 +47,27 @@
         text-align: center;
         color: #2c3e50;
         margin-top: 60px;
+    }
+</style>
+
+<style scoped>
+
+    div.tabs {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        grid-row-gap: 1px;
+        grid-column-gap: 1px;
+        background-color: black;
+    }
+
+    div.tabs .tab {
+        #display: inline;
+        border: none;
+        padding: 10px 20px;
+        margin: 0;
+        vertical-align: center;
+        text-align: center;
+        line-height: 45px;
+        background-color: white;
     }
 </style>

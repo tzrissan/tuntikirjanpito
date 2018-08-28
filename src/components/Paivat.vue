@@ -1,7 +1,5 @@
 <template>
     <div class="hello">
-        <h1>{{ today | moment("D.M.YYYY") }}</h1>
-
         <h3 v-if="uusi">uuusi</h3>
         <form>
             <table>
@@ -162,7 +160,6 @@
             return {
                 editId: undefined,
                 tyoajat: Tuntikirjanpito.get(),
-                today: new Date(),
                 uusi: false
             }
         }
