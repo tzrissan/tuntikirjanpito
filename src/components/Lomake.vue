@@ -25,7 +25,6 @@
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
                             <button type="button" class="cancel" v-on:click="tyhjenna()">&#x2715;</button>
-                            <button type="button" class="delete" v-on:click="tyhjenna()">&#x1F5D1;</button>
                         </div>
                         <button v-else type="button" class="edit" v-on:click="edit(paiva)">EDIT</button>
                     </td>
@@ -37,11 +36,12 @@
                     </td>
                     <td  class="tuloJaLahtoajat">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
-                            <span v-if="isEditing(paiva)">
+                            <template v-if="isEditing(paiva)">
                                 <input type="text" class="tuloaika" minlength="3" maxlength="5" v-model="merkinta.tuloaika"/>
                                 -
                                 <input type="text" class="lahtoaika" minlength="3" maxlength="5" v-model="merkinta.lahtoaika"/>
-                            </span>
+                                <button type="button" class="delete" v-on:click="poista(merkinta.id)">&#x2715;</button>
+                            </template>
                             <span v-else>{{ merkinta.tuloaika }} - {{ merkinta.lahtoaika }}<br></span>
                             <span v-if="merkinta.saving">saving in progress</span>
                         </div>
@@ -63,7 +63,7 @@
                     <td>
                         <div v-if="isEditing(paiva)">
                             <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
-                                <input type="number" class="kirjaus" v-model="merkinta.kirjaus" min="0" step="0.25"/>
+                                <input type="number" class="kirjaus" v-model="merkinta.kirjaus" min="0" step="0.5"/>
                             </div>
                         </div>
                         <span v-else>{{ paiva.kirjaus }} h</span>
@@ -81,7 +81,7 @@
                     </td>
                     <td class="kommentti">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
-                            <input v-if="isEditing(paiva)" class="kommentti" type="text" v-model="merkinta.kommentti" min="0" step="0.25"/>
+                            <input v-if="isEditing(paiva)" class="kommentti" type="text" v-model="merkinta.kommentti"/>
                             <span v-else>{{ merkinta.kommentti }}</span>
                         </div>
 
@@ -100,7 +100,7 @@
     import axios from 'axios';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
-    import { formatTimeFromString } from '../date-time-util';
+    import {formatTimeFromString} from '../date-time-util';
 
     export default {
         name: 'Lomake',
@@ -126,7 +126,7 @@
             laskevassaJarjestyksessa(rivit) {
                 return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
             },
-            aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki=false) {
+            aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki = false) {
                 const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
                 const minuutteja = Math.abs(aikavaliMinuutteina);
                 const d = numeral(Math.trunc(minuutteja / (24 * 60))).format('0');
@@ -144,6 +144,18 @@
             },
             isEditing(tyoaika) {
                 return this.editId === tyoaika.date;
+            },
+            poista(merkintaId) {
+                const merkinnat = this.tyoajat.merkinnat;
+                if (confirm(`Delete row ${merkintaId} ??`)) {
+                    axios.delete(`/tunnit.data?${merkintaId}`).then(
+                        () => {
+                            const idx = merkinnat.findIndex(m => m.id === merkintaId);
+                            merkinnat.splice(idx, 1);
+                            Tuntikirjanpito.laskeUudestaan();
+                        }
+                    )
+                }
             }
         },
         data() {
@@ -183,7 +195,7 @@
         padding: 3px;
     }
 
-    button.submit, button.cancel, button.delete {
+    button.submit, button.cancel {
         border: none;
         color: white;
         padding: 2px;
@@ -205,7 +217,12 @@
 
     button.delete {
         color: #f44336;
-        background-color: white;
+        border: 1px solid #f44336;
+        background-color: transparent;
+        height: 19px;
+        width: 19px;
+        margin: 2px;
+        padding: 0;
     }
 
     button.delete:hover {
@@ -216,11 +233,6 @@
     button.edit {
         border: 1px solid grey;
         width: 45px;
-    }
-
-    input.date {
-        width: 80px;
-        padding: 2px 10px;
     }
 
     input.tuloaika, input.lahtoaika {

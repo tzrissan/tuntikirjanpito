@@ -51,7 +51,7 @@
                         Tuntikirjanpito.get().merkinnat.push(newLine);
                         Tuntikirjanpito.laskeUudestaan();
                         this.done();
-                   })
+                    })
             },
             tyhjenna() {
                 this.done();
