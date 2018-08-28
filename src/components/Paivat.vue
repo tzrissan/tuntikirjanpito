@@ -10,7 +10,7 @@
                     <th>lounas</th>
                     <th>työaika</th>
                     <th>kirjaus</th>
-                    <th><small>todellisuus<br>- kirjaus</small></th>
+                    <th><small>työaika<br>- kirjaus</small></th>
                     <th>saldo</th>
                     <th>kommentti</th>
                 </tr>
@@ -73,8 +73,8 @@
                     </td>
                     <td class="saldo">
                         <span v-if="isEditing(paiva)"></span>
-                        <span v-else>{{ paiva.saldo | numeral('0.0') }}</span>
-                        <small v-if="paiva.saldomuutos">({{ paiva.saldomuutos | numeral('+0.0') }})</small>
+                        <span v-else>{{ paiva.saldo | numeral('0.0') }} h </span>
+                        <small v-if="paiva.saldomuutos">({{ paiva.saldomuutos | numeral('+0.0') }} h)</small>
                     </td>
                     <td class="kommentti">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
