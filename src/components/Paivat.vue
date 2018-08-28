@@ -103,7 +103,7 @@
     import {formatTimeFromString} from '../date-time-util';
 
     export default {
-        name: 'Lomake',
+        name: 'Paivat',
         components: {UusiRivi},
         props: {},
         methods: {

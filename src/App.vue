@@ -1,16 +1,16 @@
 <template>
     <div id="app">
-        <Lomake/>
+        <Paivat/>
     </div>
 </template>
 
 <script>
-    import Lomake from './components/Lomake.vue'
+    import Paivat from './components/Paivat.vue'
 
     export default {
         name: 'app',
         components: {
-            Lomake
+            Paivat
         }
     }
 </script>
