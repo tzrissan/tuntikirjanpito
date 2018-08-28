@@ -1,11 +1,11 @@
 import _ from "lodash";
 
-const v2018alkusaldo = (18.0*60);
+const v2018alkusaldo = 18.0;
 const v2018alkuvirhe = 0;
 
 function laskeSaldomuutos(pvm, kirjaus=0) {
     //FIXME: Nyt oletetaan aina olevan arkipäivä. Ota la/su/pyhät yms huomioon
-    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? (kirjaus * 60) : 0) - (7.5 * 60);
+    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - 7.5;
 }
 
 function laskePaivienMeta(paivat) {

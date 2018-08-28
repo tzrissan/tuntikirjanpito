@@ -53,9 +53,9 @@
                     </td>
                     <td>
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ aikavali2UiStr(merkinta.tyoaika) }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ merkinta.tyoaika | aikavali2UiStr }} <br></span>
                         </small>
-                        <small v-else>{{ aikavali2UiStr(paiva.tyoaika) }}</small>
+                        <small v-else>{{ paiva.tyoaika | aikavali2UiStr }}</small>
                         </td>
                     <td>
                         <div v-if="isEditing(paiva)">
@@ -67,14 +67,14 @@
                     </td>
                     <td class="kirjausvirhe">
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">({{ aikavali2UiStr(merkinta.kirjausvirhe) }})<br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">({{ merkinta.kirjausvirhe | aikavali2UiStr }})<br></span>
                         </small>
-                        <span v-else>{{ aikavali2UiStr(paiva.kirjausvirhe) }} <small v-if="paiva.kirjausvirheenmuutos">({{ aikavali2UiStr(paiva.kirjausvirheenmuutos) }})</small></span>
+                        <span v-else>{{ paiva.kirjausvirhe | aikavali2UiStr }} <small v-if="paiva.kirjausvirheenmuutos">({{ paiva.kirjausvirheenmuutos | aikavali2UiStr(true) }})</small></span>
                     </td>
                     <td class="saldo">
                         <span v-if="isEditing(paiva)"></span>
-                        <span v-else>{{ aikavali2UiStr(paiva.saldo) }}</span>
-                        <small v-if="paiva.saldomuutos">({{ aikavali2UiStr(paiva.saldomuutos) }})</small>
+                        <span v-else>{{ paiva.saldo | numeral('0.0') }}</span>
+                        <small v-if="paiva.saldomuutos">({{ paiva.saldomuutos | numeral('+0.0') }})</small>
                     </td>
                     <td class="kommentti">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
@@ -92,8 +92,6 @@
 
 <script>
 
-    import _ from 'lodash';
-    import numeral from 'numeral';
     import axios from 'axios';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
@@ -120,15 +118,6 @@
                         }
                     )
                 });
-            },
-            aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki = false) {
-                const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
-                const minuutteja = Math.abs(aikavaliMinuutteina);
-                const d = numeral(Math.trunc(minuutteja / (24 * 60))).format('0');
-                const h = numeral(Math.trunc(minuutteja / 60) - (d * 24)).format('00');
-                const m = numeral(Math.trunc(minuutteja % 60)).format('00');
-                const fullText = `${sign}${d}:${h}:${m}`;
-                return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             tyhjenna() {
                 this.local.editId = undefined;
