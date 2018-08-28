@@ -1,11 +1,10 @@
 <template>
     <div class="hello">
-        <h3 v-if="uusi">uuusi</h3>
         <form>
             <table>
                 <thead>
                 <tr>
-                    <th class="uusi" v-on:click="uusi = true; editId = undefined;">+</th>
+                    <th class="uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</th>
                     <th colspan="2">pvm</th>
                     <th>tuloaika - lähtöaika</th>
                     <th>lounas</th>
@@ -17,8 +16,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <UusiRivi v-if="uusi" v-bind:done="() => uusi = false"></UusiRivi>
-                <tr v-for="paiva in laskevassaJarjestyksessa(tyoajat.paivat)" v-bind:key="paiva.date">
+                <UusiRivi v-if="local.uusi" v-bind:done="() => local.uusi = false"></UusiRivi>
+                <tr v-for="paiva in local.paivat" v-bind:key="paiva.date">
                     <td>
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
@@ -99,6 +98,7 @@
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {formatTimeFromString} from '../date-time-util';
+    import {yhdistaPaivat} from './paiva-util';
 
     export default {
         name: 'Paivat',
@@ -121,9 +121,6 @@
                     )
                 });
             },
-            laskevassaJarjestyksessa(rivit) {
-                return _.sortBy(rivit, ['date', 'tuloaika']).reverse();
-            },
             aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki = false) {
                 const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
                 const minuutteja = Math.abs(aikavaliMinuutteina);
@@ -134,17 +131,17 @@
                 return fullText.replace(/^(-?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
             },
             tyhjenna() {
-                this.editId = undefined;
+                this.local.editId = undefined;
             },
             edit(tyoaika) {
-                this.uusi = false;
-                this.editId = tyoaika.date;
+                this.local.uusi = false;
+                this.local.editId = tyoaika.date;
             },
             isEditing(tyoaika) {
-                return this.editId === tyoaika.date;
+                return this.local.editId === tyoaika.date;
             },
             poista(merkintaId) {
-                const merkinnat = this.tyoajat.merkinnat;
+                const merkinnat = this.global.merkinnat;
                 if (confirm(`Delete row ${merkintaId} ??`)) {
                     axios.delete(`/tunnit.data?${merkintaId}`).then(
                         () => {
@@ -157,10 +154,14 @@
             }
         },
         data() {
+            const global = Tuntikirjanpito.get();
             return {
-                editId: undefined,
-                tyoajat: Tuntikirjanpito.get(),
-                uusi: false
+                global,
+                local: {
+                    editId: undefined,
+                    paivat: yhdistaPaivat(global.merkinnat),
+                    uusi: false
+                }
             }
         }
     }
