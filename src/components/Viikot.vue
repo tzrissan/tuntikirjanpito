@@ -1,17 +1,9 @@
 <template>
     <div>
-        <h1>Viikot</h1>
-
         <table>
             <thead>
                 <th>Viikko</th>
-                <th>Ma</th>
-                <th>Ti</th>
-                <th>Ke</th>
-                <th>To</th>
-                <th>Pe</th>
-                <th>La</th>
-                <th>Su</th>
+                <th>Ma</th><th>Ti</th><th>Ke</th><th>To</th><th>Pe</th><th>La</th><th>Su</th>
                 <th>Kirjaus</th>
                 <th colspan="2">Saldo</th>
             </thead>
@@ -22,7 +14,9 @@
                     <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
                     <span v-else>-</span>
                 </td>
-                <td>{{ v.kirjausYhteensa | numeral('0.0') }}</td>
+                <td>
+                    <span v-if="v.kirjausYhteensa !== 0">{{ v.kirjausYhteensa | numeral('0.0') }}</span>
+                    <span v-else>-</span>
                 <td>
                     <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }} h</span>
                     <span v-else>-</span>
@@ -43,31 +37,41 @@
     const v2018alkusaldo = 18.0;
 
     function yhdistaViikot(merkinnat) {
-        return _.chain(merkinnat)
-            .map(m => {
-                const paiva = moment(m.date);
-                m.viikko = paiva.format('gggg/ww');
-                m.viikonpaiva = paiva.format('e');
-                console.log(m);
-                return m;
-            })
-            .groupBy('viikko')
-            .toPairs()
+
+        const firstDate = merkinnat.reduce((a, m) => {
+            const d = moment(m.date);
+            return _.isUndefined(a) || d.isBefore(a) ? d : a;
+        }, undefined);
+
+        const lastDate = merkinnat.reduce((a, m) => {
+            const d = moment(m.date);
+            return _.isUndefined(a) || d.isAfter(a) ? d : a;
+        }, undefined);
+
+        const weeks = [];
+
+        for (let i = moment(firstDate); i.isBefore(lastDate); i = i.add(7, 'days')) {
+            weeks.push(moment(i));
+        }
+
+        return _.chain(weeks)
+            .map(viikko => ({
+                viikko: viikko.format('gggg/ww'),
+                merkinnat: merkinnat.filter(m => moment(m.date).format('gggg/ww') === viikko.format('gggg/ww'))
+            }))
             .map(viikko => {
-                return {
-                    viikko: viikko[0],
-                    paivat: [0,1,2,3,4,5,6].map(
-                        n => {
-                            return {
-                                viikonpaiva: n,
-                                kirjaus: viikko[1].filter(m => m.viikonpaiva === '' + n).reduce((a, m) => a + m.kirjaus, 0)
-                            }
+                viikko.paivat = Array.from({length: 7}, (val, idx) => idx).map(
+                    n => {
+                        return {
+                            viikonpaiva: n,
+                            kirjaus: viikko.merkinnat.filter(m => moment(m.date).format('e') === '' + n).reduce((a, m) => a + m.kirjaus, 0)
                         }
-                    ),
-                    kirjausYhteensa: viikko[1].reduce((a, m) => a + m.kirjaus, 0),
-                    saldomuutos: viikko[1].reduce((a, m) => a + m.kirjaus, -37.5) ,
-                    merkinnat: _.sortBy(viikko[1], ['viikonpaiva', 'tuloaika', 'lahtoaika'])
-                }
+                    }
+                );
+                viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
+                viikko.tyopaivia = _.chain(viikko.merkinnat).map(m => m.date).uniq().value().length;
+                viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
+                return viikko;
             })
             .sortBy('viikko')
             .map((viikko, idx, all) => {
@@ -99,6 +103,12 @@
         border: 1px solid black;
         margin: 20px auto;
         border-collapse: collapse;
+    }
+
+    th {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        padding: 10px 20px;
     }
 
     td {

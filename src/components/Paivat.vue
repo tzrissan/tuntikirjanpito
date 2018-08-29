@@ -281,9 +281,8 @@
     }
 
     .kommentti {
-        padding: 2px 0 2px 10px;
+        padding: 2px 5px 2px 10px;
         text-align: left;
-        width: 90%;
     }
 
     .pvm {

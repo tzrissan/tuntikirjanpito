@@ -4,13 +4,16 @@
         <div class="tabs">
             <div class="tab"
                  v-bind:class="{ active: selectedTab === 'Päivät'}"
-                 @click="selectedTab='Päivät'">Päivät</div>
+                 @click="selectedTab='Päivät'">Päivät
+            </div>
             <div class="tab"
                  v-bind:class="{ active: selectedTab === 'Viikot'}"
-                 @click="selectedTab='Viikot'">Viikot</div>
+                 @click="selectedTab='Viikot'">Viikot
+            </div>
             <div class="tab"
                  v-bind:class="{ active: selectedTab === 'Käppyrät'}"
-                 @click="selectedTab='Käppyrät'">Käppyrät</div>
+                 @click="selectedTab='Käppyrät'">Käppyrät
+            </div>
         </div>
         <div class="tab-content">
             <Paivat v-if="selectedTab==='Päivät'"/>
@@ -52,22 +55,24 @@
 
 <style scoped>
 
-    div.tabs {
-        display: grid;
-        grid-template-columns: auto auto auto;
-        grid-row-gap: 1px;
-        grid-column-gap: 1px;
-        background-color: black;
-    }
-
     div.tabs .tab {
-        #display: inline;
+        display: inline;
         border: none;
+        border-right: 1px solid black;
         padding: 10px 20px;
         margin: 0;
         vertical-align: center;
         text-align: center;
-        line-height: 45px;
         background-color: white;
     }
+
+    div.tabs .tab:last-child {
+        border-right: none;
+    }
+
+    .active {
+        font-size: large;
+        font-weight: bold;
+    }
+
 </style>
