@@ -9,19 +9,19 @@
             </thead>
             <tbody>
             <tr v-for="v in computedViikot" v-bind:key="v.viikko">
-                <td>{{ v.viikko }}</td>
-                <td v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva">
+                <td class="viikkonro">vk {{ v.maanataiPaiva | moment("ww") }} <span class="vuosi">-{{ v.maanataiPaiva | moment("gg") }} </span> <span class="paivat">({{ v.maanataiPaiva | moment("D.M") }}-{{ v.sunnuntaiPaiva | moment("D.M.")}})</span></td>
+                <td class="kirjaus" v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva">
                     <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
                     <span v-else>-</span>
                 </td>
-                <td>
+                <td class="kirjausYhteensa">
                     <span v-if="v.kirjausYhteensa !== 0">{{ v.kirjausYhteensa | numeral('0.0') }}</span>
                     <span v-else>-</span>
-                <td>
+                <td class="saldo">
                     <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }} h</span>
                     <span v-else>-</span>
                 </td>
-                <td>{{ v.saldo }} h</td>
+                <td class="saldo">{{ v.saldo }} h</td>
             </tr>
             </tbody>
         </table>
@@ -44,6 +44,8 @@
                 return _.chain(kaikkiViikotTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => ({
                         viikko: viikko.format('gggg/ww'),
+                        maanataiPaiva : moment(viikko).startOf('week'),
+                        sunnuntaiPaiva : moment(viikko).endOf('week').startOf('day'),
                         merkinnat: this.global.merkinnat.filter(m => moment(m.date).format('gggg/ww') === viikko.format('gggg/ww'))
                     }))
                     .map(viikko => {
@@ -106,6 +108,19 @@
 
     .saldomuutos {
         font-size: small;
+    }
+
+    .viikkonro {
+        text-align: left;
+    }
+    .viikkonro .vuosi {
+        font-size: small;
+    }
+    .viikkonro .paivat {
+        font-size: small;
+    }
+    .kirjaus, .kirjausYhteensa, .saldo {
+        text-align: right;
     }
 
 </style>
