@@ -16,8 +16,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <UusiRivi v-if="local.uusi" v-bind:done="() => local.uusi = false"></UusiRivi>
-                <tr v-for="paiva in local.paivat" v-bind:key="paiva.date">
+                <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
+                <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date">
                     <td>
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
@@ -92,16 +92,67 @@
 
 <script>
 
+    import _ from 'lodash';
     import axios from 'axios';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {formatTimeFromString} from '../date-time-util';
-    import {yhdistaPaivat} from './paiva-util';
 
     export default {
         name: 'Paivat',
         components: {UusiRivi},
         props: {},
+        computed: {
+            computedPaivat() {
+
+                const v2018alkusaldo = 18.0;
+                const v2018alkuvirhe = 0;
+
+                function laskeSaldomuutos(pvm, kirjaus=0) {
+                    //FIXME: Nyt oletetaan aina olevan arkipäivä. Ota la/su/pyhät yms huomioon
+                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - 7.5;
+                }
+
+                function laskePaivienMeta(paivat) {
+                    function sum(acc, n) {
+                        return acc + n;
+                    }
+                    return _.chain(paivat)
+                        .sortBy('date')
+                        .map((paiva, idx, all) => {
+                            paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
+                            paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
+                            paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.kirjaus);
+                            paiva.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
+                            paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
+                            paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
+                            paiva.kirjausvirhe = (idx ? all[idx - 1].kirjausvirhe : v2018alkuvirhe) + (_.isNaN(paiva.kirjausvirheenmuutos) ? 0 : paiva.kirjausvirheenmuutos);
+
+                            return paiva;
+                        })
+                        .value();
+                }
+
+                function laskevassaJarjestyksessa(paivat) {
+                    return _.sortBy(paivat, ['date', 'tuloaika']).reverse();
+                }
+
+                return laskevassaJarjestyksessa(
+                    laskePaivienMeta(
+                        _.chain(this.global.merkinnat)
+                            .groupBy('date')
+                            .toPairs()
+                            .map(pair => {
+                                return {
+                                    date: pair[0],
+                                    merkinnat: _.sortBy(pair[1], ['tuloaika', 'lahtoaika'])
+                                }
+                            })
+                            .value()
+                    )
+                );
+            }
+        },
         methods: {
             tallenna(paiva) {
                 paiva.merkinnat.forEach(merkinta => {
@@ -140,6 +191,10 @@
                         }
                     )
                 }
+            },
+            uusiRiviLisatty() {
+                this.local.uusi = false;
+                Tuntikirjanpito.laskeUudestaan();
             }
         },
         data() {
@@ -148,7 +203,6 @@
                 global,
                 local: {
                     editId: undefined,
-                    paivat: yhdistaPaivat(global.merkinnat),
                     uusi: false
                 }
             }

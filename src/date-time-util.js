@@ -1,4 +1,6 @@
 import numeral from 'numeral';
+import moment from 'moment';
+import _ from 'lodash';
 
 export const TIME_REGEX = /(\d\d?).(\d\d?)/;
 export const UI_DATE_REGEX = /(\d\d?).(\d\d?).(\d{4})/;
@@ -59,4 +61,22 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
     const loppuH = parseInt(loppu.replace(TIME_REGEX, '$1'));
     const loppuM = parseInt(loppu.replace(TIME_REGEX, '$2'));
     return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
+}
+
+export function kaikkiViikotTapahtumienValilla(merkinnat = []) {
+    const ekaPaiva = merkinnat.reduce((a, m) => {
+        const d = moment(m.date);
+        return _.isUndefined(a) || d.isBefore(a) ? d : a;
+    }, undefined);
+
+    const vikaPaiva = merkinnat.reduce((a, m) => {
+        const d = moment(m.date);
+        return _.isUndefined(a) || d.isAfter(a) ? d : a;
+    }, undefined);
+
+    const viikot = [];
+    for (let i = moment(ekaPaiva); i.isBefore(vikaPaiva); i = i.add(7, 'days')) {
+        viikot.push(moment(i));
+    }
+    return viikot;
 }

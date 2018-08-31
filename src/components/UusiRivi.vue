@@ -45,12 +45,13 @@
                     kirjaus: parseFloat(this.kirjaus),
                     kommentti: this.kommentti
                 };
+                const doneFn = this.done;
                 axios.post('/tunnit.data', newLine)
                     .then(function (response) {
                         newLine.id = response.data;
                         Tuntikirjanpito.get().merkinnat.push(newLine);
                         Tuntikirjanpito.laskeUudestaan();
-                        this.done();
+                        doneFn();
                     })
             },
             tyhjenna() {
