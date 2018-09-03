@@ -23,6 +23,15 @@
                 </td>
                 <td class="saldo">{{ v.saldo }} h</td>
             </tr>
+            <tr>
+                <td colspan="11" class="rajoitus">
+                    <div class="clickable"
+                         v-for="sivukoko in local.sivukoot"
+                         v-bind:key="sivukoko"
+                         v-bind:class="{ active: local.sivukoko === sivukoko}"
+                         v-on:click="local.sivukoko = sivukoko">{{ sivukoko }} viikkoa</div>
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -40,7 +49,6 @@
         name: 'Viikot',
         computed: {
             computedViikot() {
-
                 return _.chain(kaikkiViikotTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => ({
                         viikko: viikko.format('gggg/ww'),
@@ -68,12 +76,17 @@
                         return viikko;
                     })
                     .reverse()
-                    .value();
+                    .value()
+                    .splice(0, this.local.sivukoko);
             }
         },
         data() {
             return {
-                global: Tuntikirjanpito.get()
+                global: Tuntikirjanpito.get(),
+                local: {
+                    sivukoko: 13,
+                    sivukoot: [4, 13, 26, 52]
+                }
             }
         }
     }
@@ -113,14 +126,37 @@
     .viikkonro {
         text-align: left;
     }
+
     .viikkonro .vuosi {
         font-size: small;
     }
+
     .viikkonro .paivat {
         font-size: small;
     }
+
     .kirjaus, .kirjausYhteensa, .saldo {
         text-align: right;
     }
+
+    .rajoitus {
+        color: black;
+    }
+
+    .rajoitus div {
+        display: inline;
+        border-right: 1px solid black;
+        padding: 0 5px
+    }
+
+    .rajoitus div:last-child {
+        border-right: none;
+    }
+
+    .active {
+        font-size: large;
+        font-weight: bold;
+    }
+
 
 </style>

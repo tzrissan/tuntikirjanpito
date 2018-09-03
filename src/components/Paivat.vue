@@ -89,7 +89,8 @@
                         <div class="clickable"
                              v-for="sivukoko in local.sivukoot"
                              v-bind:key="sivukoko.name"
-                             v-on:click="valitseSivukoko(sivukoko)">{{ sivukoko.name }}</div>
+                             v-bind:class="{ active: local.sivukoko === sivukoko}"
+                             v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
                     </td>
                 </tr>
                 </tbody>
@@ -112,8 +113,8 @@
         function sivukoko(name, filterFn) {
             return { name, filterFn }
         }
-        function filter(merkinta, f) {
-            const limit = f(moment(merkinta[0].date)).startOf('day');
+        function filter(paiva, f) {
+            const limit = f(moment(paiva[0].date)).startOf('day');
             return p => moment(p.date).isAfter(limit);
         }
         return [
@@ -220,9 +221,6 @@
             uusiRiviLisatty() {
                 this.local.uusi = false;
                 Tuntikirjanpito.laskeUudestaan();
-            },
-            valitseSivukoko(uusiSivukoko) {
-                this.local.sivukoko = uusiSivukoko;
             }
         },
         data() {
@@ -390,6 +388,11 @@
 
     .rajoitus div:last-child {
         border-right: none;
+    }
+
+    .active {
+        font-size: large;
+        font-weight: bold;
     }
 
 </style>
