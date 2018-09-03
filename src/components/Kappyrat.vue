@@ -1,5 +1,13 @@
 <template>
-    <div>
+    <div class="chart">
+        <div>
+            <!-- label>Aikaväli</label><input type="date"/>-<input type="date"/ -->
+            <label>Tarkkus</label>
+            <select v-model="local.tarkkuus">
+                <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
+            </select>
+            {{ local.aikavali }}
+        </div>
         <BarChart
                 v-bind:data="chartData"
                 v-bind:options="chartOptions"></BarChart>
@@ -12,8 +20,19 @@
     import BarChart from './BarChart';
     import _ from 'lodash';
     import moment from 'moment';
-    import {kaikkiViikotTapahtumienValilla} from '../date-time-util';
+    import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {v2018alkusaldo} from '../data';
+
+    const tarkkuudet = (()=>{
+        const aikavali = (nimi, step, format) => ({ nimi, step, format });
+        return [
+            aikavali('paiva', 'day', 'D.M.Y'),
+            aikavali('viikko', 'week', 'w/gg'),
+            aikavali('kuukausi', 'month', 'M/YY'),
+            aikavali('3kk', 'quarter', 'Q/YY'),
+            aikavali('vuosi', 'year', 'YYYY')
+        ]
+    })();
 
     export const CHART_COLORS = {
         green(alpha = 1) {
@@ -44,6 +63,10 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
+                        yAxes: [
+                            {id: 'saldo', type: 'linear', position: 'left', ticks: {min: 0}},
+                            {id: 'kirjaus', type: 'linear', position: 'right', gridLines: {display: false}}
+                        ]
                     },
                     legend: {
                         position: 'bottom'
@@ -51,29 +74,20 @@
                 }
             },
             chartData() {
-
-                const viikot  = _.chain(kaikkiViikotTapahtumienValilla(this.global.merkinnat))
-                    .map(viikko => ({
-                        viikko: viikko.format('gggg/ww'),
-                        maanataiPaiva : moment(viikko).startOf('week'),
-                        sunnuntaiPaiva : moment(viikko).endOf('week').startOf('day'),
-                        merkinnat: this.global.merkinnat.filter(m => moment(m.date).format('gggg/ww') === viikko.format('gggg/ww'))
-                    }))
-                    .map(viikko => {
-                        viikko.paivat = Array.from({length: 7}, (val, idx) => idx).map(
-                            n => {
-                                return {
-                                    viikonpaiva: n,
-                                    kirjaus: viikko.merkinnat.filter(m => moment(m.date).format('e') === '' + n).reduce((a, m) => a + m.kirjaus, 0)
-                                }
-                            }
-                        );
-                        viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        viikko.tyopaivia = _.chain(viikko.merkinnat).map(m => m.date).uniq().value().length;
-                        viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
-                        return viikko;
+                const format = this.local.tarkkuus.format;
+                const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
+                    .map(aikavali => {
+                        aikavali.nimi = aikavali.alku.format(format);
+                        aikavali.merkinnat = this.global.merkinnat.filter(m => moment(m.date).isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
+                        return aikavali;
                     })
-                    .sortBy('viikko')
+                    .map(aikavali => {
+                        aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
+                        aikavali.tyopaivia = _.chain(aikavali.merkinnat).map(m => m.date).uniq().value().length;
+                        aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
+                        return aikavali;
+                    })
+                    .sortBy('alku')
                     .map((viikko, idx, all) => {
                         viikko.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
                         return viikko;
@@ -81,34 +95,41 @@
                     .value();
 
                 return {
-                    labels: viikot.map(viikko => viikko.maanataiPaiva.format("ww/-gg")),
+                    labels: aikavalit.map(aikavali => aikavali.nimi),
                     datasets: [{
                         label: 'Tuntisaldo',
                         type: 'line',
                         borderColor: CHART_COLORS.blue(),
                         backgroundColor: CHART_COLORS.blue(0.6),
-                        data: viikot.map(viikko => viikko.saldo)
+                        data: aikavalit.map(viikko => viikko.saldo),
+                        yAxisID: "saldo"
                     },{
                         label: 'Kirjaus',
                         type: 'line',
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: viikot.map(viikko => viikko.kirjausYhteensa)
+                        data: aikavalit.map(viikko => viikko.kirjausYhteensa),
+                        yAxisID: "kirjaus"
                     },{
                         label: 'Normiviikko',
                         type: 'line',
                         borderColor: CHART_COLORS.yellow(),
                         backgroundColor: CHART_COLORS.yellow(0.6),
                         fill: false,
-                        data: viikot.map(viikko => viikko.tyopaivia * 7.5)
+                        data: aikavalit.map(viikko => viikko.tyopaivia * 7.5),
+                        yAxisID: "kirjaus"
                     }]
                 }
             }
         },
         data() {
             return {
-                global: Tuntikirjanpito.get()
+                global: Tuntikirjanpito.get(),
+                local: {
+                    tarkkuus: tarkkuudet[1],
+                    tarkkuudet
+                }
             }
         }
     }
@@ -116,5 +137,27 @@
 </script>
 
 <style scoped>
+    .chart {
+        padding: 20px
+    }
+
+    .chart {
+        color: black;
+    }
+
+    .chart .filter {
+        display: inline;
+        border-right: 1px solid black;
+        padding: 0 5px
+    }
+
+    .chart .filter:last-child {
+        border-right: none;
+    }
+
+    .active {
+        font-size: large;
+        font-weight: bold;
+    }
 
 </style>

@@ -63,22 +63,25 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
     return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
 }
 
-export function kaikkiViikotTapahtumienValilla(merkinnat = []) {
+export function kaikkiAikavalitTapahtumienValilla(merkinnat = [], step = 'week') {
     const ekaPaiva = moment(merkinnat.reduce((a, m) => {
         const d = moment(m.date);
         return _.isUndefined(a) || d.isBefore(a) ? d : a;
     }, undefined));
-    ekaPaiva.startOf('week');
+    ekaPaiva.startOf(step);
 
     const vikaPaiva = moment(merkinnat.reduce((a, m) => {
         const d = moment(m.date);
         return _.isUndefined(a) || d.isAfter(a) ? d : a;
     }, undefined));
-    vikaPaiva.endOf('week');
+    vikaPaiva.endOf(step);
 
     const viikot = [];
-    for (let i = moment(ekaPaiva); i.isBefore(vikaPaiva); i = i.add(7, 'days')) {
-        viikot.push(moment(i));
+    for (let i = moment(ekaPaiva); i.isBefore(vikaPaiva); i = i.add(1, step)) {
+        viikot.push({
+            alku : moment(i).startOf(step),
+            loppu : moment(i).endOf(step),
+        });
     }
     return viikot;
 }

@@ -8,8 +8,8 @@
                 <th colspan="2">Saldo</th>
             </thead>
             <tbody>
-            <tr v-for="v in computedViikot" v-bind:key="v.viikko">
-                <td class="viikkonro">vk {{ v.maanataiPaiva | moment("ww") }} <span class="vuosi">-{{ v.maanataiPaiva | moment("gg") }} </span> <span class="paivat">({{ v.maanataiPaiva | moment("D.M") }}-{{ v.sunnuntaiPaiva | moment("D.M.")}})</span></td>
+            <tr v-for="v in computedViikot" v-bind:key="v.nimi">
+                <td class="viikkonro">vk {{ v.alku | moment("ww") }} <span class="vuosi">-{{ v.alku | moment("gg") }} </span> <span class="paivat">({{ v.alku | moment("D.M") }}-{{ v.loppu | moment("D.M.")}})</span></td>
                 <td class="kirjaus" v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva">
                     <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
                     <span v-else>-</span>
@@ -42,20 +42,18 @@
     import Tuntikirjanpito from '../data';
     import _ from 'lodash';
     import moment from 'moment';
-    import {kaikkiViikotTapahtumienValilla} from '../date-time-util';
+    import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {v2018alkusaldo} from '../data';
 
     export default {
         name: 'Viikot',
         computed: {
             computedViikot() {
-                return _.chain(kaikkiViikotTapahtumienValilla(this.global.merkinnat))
-                    .map(viikko => ({
-                        viikko: viikko.format('gggg/ww'),
-                        maanataiPaiva : moment(viikko).startOf('week'),
-                        sunnuntaiPaiva : moment(viikko).endOf('week').startOf('day'),
-                        merkinnat: this.global.merkinnat.filter(m => moment(m.date).format('gggg/ww') === viikko.format('gggg/ww'))
-                    }))
+                return _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
+                    .map(viikko => {
+                        viikko.merkinnat = this.global.merkinnat.filter(m => moment(m.date).isBetween(viikko.alku, viikko.loppu, null, '[]'));
+                        return viikko;
+                    })
                     .map(viikko => {
                         viikko.paivat = Array.from({length: 7}, (val, idx) => idx).map(
                             n => {
@@ -70,7 +68,7 @@
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
                         return viikko;
                     })
-                    .sortBy('viikko')
+                    .sortBy('alku')
                     .map((viikko, idx, all) => {
                         viikko.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
                         return viikko;

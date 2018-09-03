@@ -118,7 +118,7 @@
             return p => moment(p.date).isAfter(limit);
         }
         return [
-            sivukoko('viikko', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'week')))),
+            sivukoko('nimi', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'week')))),
             sivukoko('kk', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'month')))),
             sivukoko('3kk', paivat => paivat.filter(filter(paivat, m => m.subtract(3, 'month')))),
             sivukoko('6kk', paivat => paivat.filter(filter(paivat, m => m.subtract(6, 'month')))),
