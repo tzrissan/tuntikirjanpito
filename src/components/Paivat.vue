@@ -84,6 +84,14 @@
 
                     </td>
                 </tr>
+                <tr>
+                    <td colspan="10" class="rajoitus">
+                        <div class="clickable"
+                             v-for="sivukoko in local.sivukoot"
+                             v-bind:key="sivukoko"
+                             v-on:click="valitseSivukoko(sivukoko)">{{ sivukoko }}</div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </form>
@@ -148,7 +156,7 @@
                             })
                             .value()
                     )
-                );
+                ).slice(0, this.local.sivukoko);
             }
         },
         methods: {
@@ -193,6 +201,9 @@
             uusiRiviLisatty() {
                 this.local.uusi = false;
                 Tuntikirjanpito.laskeUudestaan();
+            },
+            valitseSivukoko(uusiSivukoko) {
+                this.local.sivukoko = uusiSivukoko;
             }
         },
         data() {
@@ -201,7 +212,9 @@
                 global,
                 local: {
                     editId: undefined,
-                    uusi: false
+                    uusi: false,
+                    sivukoko: 20,
+                    sivukoot: [ 20, 60, 120, 220 ]
                 }
             }
         }
@@ -344,6 +357,20 @@
 
     .tuloJaLahtoajat {
         white-space: nowrap;
+    }
+
+    .rajoitus {
+        color: black;
+    }
+
+    .rajoitus div {
+        display: inline;
+        border-right: 1px solid black;
+        padding: 0 5px
+    }
+
+    .rajoitus div:last-child {
+        border-right: none;
     }
 
 </style>

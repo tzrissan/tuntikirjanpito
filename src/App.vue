@@ -2,15 +2,15 @@
     <div id="app">
         <h1>{{ today | moment("D.M.YYYY") }}</h1>
         <div class="tabs">
-            <div class="tab"
+            <div class="tab clickable"
                  v-bind:class="{ active: selectedTab === 'Päivät'}"
                  @click="selectedTab='Päivät'">Päivät
             </div>
-            <div class="tab"
+            <div class="tab clickable"
                  v-bind:class="{ active: selectedTab === 'Viikot'}"
                  @click="selectedTab='Viikot'">Viikot
             </div>
-            <div class="tab"
+            <div class="tab clickable"
                  v-bind:class="{ active: selectedTab === 'Käppyrät'}"
                  @click="selectedTab='Käppyrät'">Käppyrät
             </div>
@@ -51,6 +51,10 @@
         color: #2c3e50;
         margin-top: 60px;
     }
+
+    .clickable {
+        cursor: pointer;
+    }
 </style>
 
 <style scoped>
@@ -74,5 +78,7 @@
         font-size: large;
         font-weight: bold;
     }
+
+
 
 </style>
