@@ -97,6 +97,7 @@
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {formatTimeFromString} from '../date-time-util';
+    import {v2018alkusaldo, v2018alkuvirhe} from '../data';
 
     export default {
         name: 'Paivat',
@@ -104,9 +105,6 @@
         props: {},
         computed: {
             computedPaivat() {
-
-                const v2018alkusaldo = 18.0;
-                const v2018alkuvirhe = 0;
 
                 function laskeSaldomuutos(pvm, kirjaus=0) {
                     //FIXME: Nyt oletetaan aina olevan arkipäivä. Ota la/su/pyhät yms huomioon

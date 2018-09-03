@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "chart.js": "^2.7.2",
     "lodash": "^4.17.10",
     "numeral": "^2.0.6",
     "vue": "^2.5.16",
+    "vue-chartjs": "^3.4.0",
     "vue-moment": "^4.0.0"
   },
   "devDependencies": {

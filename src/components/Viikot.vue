@@ -34,12 +34,12 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiViikotTapahtumienValilla} from '../date-time-util';
+    import {v2018alkusaldo} from '../data';
 
     export default {
         name: 'Viikot',
         computed: {
             computedViikot() {
-                const v2018alkusaldo = 18.0;
 
                 return _.chain(kaikkiViikotTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => ({

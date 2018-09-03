@@ -49,8 +49,8 @@ if (!PROD) {
             {"lahtoaika": "17:20", "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.0, "date": "2018-02-16", "lounaita": 3, "id": 188},
             {"lahtoaika": "17:50", "kommentti": null, "tuloaika": "09:05", "kirjaus": 8.0, "date": "2018-02-19", "lounaita": 1, "id": 189},
             {"lahtoaika": "17:25", "kommentti": null, "tuloaika": "08:55", "kirjaus": 8.0, "date": "2018-02-20", "lounaita": 1, "id": 190},
-            {"lahtoaika": "14:10", "kommentti": "Markun l\u00e4ksi\u00e4iset oli tiistaina. Ke aika rapea olo. Suomen peli keskell\u00e4 p\u00e4iv\u00e4\u00e4", "tuloaika": "09:45", "kirjaus": null, "date": "2018-02-21", "lounaita": 0, "id": 191},
-            {"lahtoaika": "18:30", "kommentti": null, "tuloaika": "16:25", "kirjaus": 6.0, "date": "2018-02-21", "lounaita": 1, "id": 192},
+            {"lahtoaika": "14:10", "kommentti": "Markun l\u00e4ksi\u00e4iset oli tiistaina. Aika rapea olo.", "tuloaika": "09:45", "kirjaus": 4.5, "date": "2018-02-21", "lounaita": 1, "id": 191},
+            {"lahtoaika": "18:30", "kommentti": "Suomen peli keskell\u00e4 p\u00e4iv\u00e4\u00e4", "tuloaika": "16:25", "kirjaus": 1.5, "date": "2018-02-21", "lounaita": 0, "id": 192},
             {"lahtoaika": "16:25", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.0, "date": "2018-02-22", "lounaita": 1, "id": 193},
             {"lahtoaika": "17:15", "kommentti": null, "tuloaika": "08:50", "kirjaus": 7.5, "date": "2018-02-23", "lounaita": 2, "id": 194},
             {"lahtoaika": "17:50", "kommentti": null, "tuloaika": "09:05", "kirjaus": 8.0, "date": "2018-02-26", "lounaita": 1, "id": 195},
@@ -82,8 +82,8 @@ if (!PROD) {
             {"lahtoaika": "17:20", "kommentti": null, "tuloaika": "09:00", "kirjaus": 8.0, "date": "2018-04-10", "lounaita": 1, "id": 221},
             {"lahtoaika": "16:15", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 7.0, "date": "2018-04-11", "lounaita": 1, "id": 222},
             {"lahtoaika": "16:30", "kommentti": "Viikki", "tuloaika": "08:55", "kirjaus": 7.0, "date": "2018-04-12", "lounaita": 1, "id": 223},
-            {"lahtoaika": "12:15", "kommentti": "P\u00e4rr\u00e4 ulos talviparkista", "tuloaika": "08:45", "kirjaus": null, "date": "2018-04-13", "lounaita": 0, "id": 224},
-            {"lahtoaika": "16:15", "kommentti": null, "tuloaika": "14:25", "kirjaus": 5.0, "date": "2018-04-13", "lounaita": 1, "id": 225},
+            {"lahtoaika": "12:15", "kommentti": "P\u00e4rr\u00e4 ulos talviparkista", "tuloaika": "08:45", "kirjaus": 3.0, "date": "2018-04-13", "lounaita": 1, "id": 224},
+            {"lahtoaika": "16:15", "kommentti": "", "tuloaika": "14:25", "kirjaus": 2.0, "date": "2018-04-13", "lounaita": 0, "id": 225},
             {"lahtoaika": "17:45", "kommentti": null, "tuloaika": "09:10", "kirjaus": 8.0, "date": "2018-04-16", "lounaita": 1, "id": 226},
             {"lahtoaika": "17:30", "kommentti": null, "tuloaika": "09:20", "kirjaus": 7.5, "date": "2018-04-17", "lounaita": 1, "id": 227},
             {"lahtoaika": "17:25", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 8.0, "date": "2018-04-18", "lounaita": 1, "id": 228},
@@ -103,8 +103,8 @@ if (!PROD) {
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-05-09", "lounaita": 1, "id": 242},
             {"lahtoaika": "16:55", "kommentti": null, "tuloaika": "08:55", "kirjaus": 7.5, "date": "2018-05-11", "lounaita": 1, "id": 243},
             {"lahtoaika": "17:50", "kommentti": "Viikki", "tuloaika": "08:50", "kirjaus": 8.5, "date": "2018-05-14", "lounaita": 1, "id": 244},
-            {"lahtoaika": "12:15", "kommentti": "Ti lounasutauolla", "tuloaika": "09:05", "kirjaus": null, "date": "2018-05-15", "lounaita": 0, "id": 245},
-            {"lahtoaika": "17:30", "kommentti": "Ti lounasutauolla", "tuloaika": "13:30", "kirjaus": 6.5, "date": "2018-05-15", "lounaita": 1, "id": 246},
+            {"lahtoaika": "12:15", "kommentti": "Ti lounastauolla", "tuloaika": "09:05", "kirjaus": 3.0, "date": "2018-05-15", "lounaita": 0, "id": 245},
+            {"lahtoaika": "17:30", "kommentti": "", "tuloaika": "13:30", "kirjaus": 3.5, "date": "2018-05-15", "lounaita": 0, "id": 246},
             {"lahtoaika": "17:10", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-05-16", "lounaita": 1, "id": 247},
             {"lahtoaika": "16:00", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 6.5, "date": "2018-05-17", "lounaita": 1, "id": 248},
             {"lahtoaika": "15:30", "kommentti": "Civilpoint", "tuloaika": "08:50", "kirjaus": 6.5, "date": "2018-05-18", "lounaita": 1, "id": 249},
@@ -122,8 +122,8 @@ if (!PROD) {
             {"lahtoaika": "18:55", "kommentti": "Aamu Civilpointilla", "tuloaika": "08:30", "kirjaus": 10.0, "date": "2018-06-05", "lounaita": 1, "id": 261},
             {"lahtoaika": "17:15", "kommentti": "Viikki, koulutusp\u00e4iv\u00e4", "tuloaika": "08:30", "kirjaus": 8.0, "date": "2018-06-06", "lounaita": 1, "id": 262},
             {"lahtoaika": "16:00", "kommentti": "Mitpa/Vallila", "tuloaika": "09:00", "kirjaus": 6.5, "date": "2018-06-07", "lounaita": 1, "id": 263},
-            {"lahtoaika": "16:00", "kommentti": "Mitpa/Vallila", "tuloaika": "08:55", "kirjaus": null, "date": "2018-06-08", "lounaita": 0, "id": 264},
-            {"lahtoaika": "19:00", "kommentti": "Tuntikirjaukset valkkarin voimalla illalla", "tuloaika": "18:30", "kirjaus": 7.0, "date": "2018-06-08", "lounaita": 1, "id": 265},
+            {"lahtoaika": "16:00", "kommentti": "Mitpa/Vallila", "tuloaika": "08:55", "kirjaus": 6.5, "date": "2018-06-08", "lounaita": 1, "id": 264},
+            {"lahtoaika": "19:00", "kommentti": "Tuntikirjaukset valkkarin voimalla illalla", "tuloaika": "18:30", "kirjaus": 0.5, "date": "2018-06-08", "lounaita": 0, "id": 299},
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:55", "kirjaus": 6.5, "date": "2018-06-11", "lounaita": 1, "id": 266},
             {"lahtoaika": "17:00", "kommentti": "Viikki, koulutusp\u00e4iv\u00e4", "tuloaika": "08:30", "kirjaus": 8.0, "date": "2018-06-12", "lounaita": 1, "id": 267},
             {"lahtoaika": "18:15", "kommentti": null, "tuloaika": "08:55", "kirjaus": 9.0, "date": "2018-06-13", "lounaita": 1, "id": 268},
@@ -137,7 +137,7 @@ if (!PROD) {
             {"lahtoaika": "17:30", "kommentti": null, "tuloaika": "08:50", "kirjaus": 8.0, "date": "2018-06-26", "lounaita": 1, "id": 276},
             {"lahtoaika": "20:00", "kommentti": null, "tuloaika": "09:00", "kirjaus": 10.5, "date": "2018-06-27", "lounaita": 1, "id": 277},
             {"lahtoaika": "17:20", "kommentti": null, "tuloaika": "09:05", "kirjaus": 8.0, "date": "2018-06-28", "lounaita": 1, "id": 278},
-            {"lahtoaika": "16:00", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 6.5, "date": "2018-06-29", "lounaita": 1, "id": 279},
+            {"lahtoaika": "16:00", "kommentti": "Viikki", "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-06-29", "lounaita": 1, "id": 279},
             {"lahtoaika": "16:40", "kommentti": null, "tuloaika": "09:00", "kirjaus": null, "date": "2018-07-23", "lounaita": 0, "id": 280},
             {"lahtoaika": "18:00", "kommentti": null, "tuloaika": "17:40", "kirjaus": 7.5, "date": "2018-07-23", "lounaita": 1, "id": 281},
             {"lahtoaika": "17:15", "kommentti": null, "tuloaika": "09:15", "kirjaus": 7.5, "date": "2018-07-24", "lounaita": 1, "id": 282},
@@ -150,13 +150,23 @@ if (!PROD) {
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-02", "lounaita": 1, "id": 289},
             {"lahtoaika": "15:00", "kommentti": null, "tuloaika": "09:00", "kirjaus": 5.5, "date": "2018-08-03", "lounaita": 1, "id": 290},
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-06", "lounaita": 1, "id": 13},
-            {"lahtoaika": "19:45", "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-07", "lounaita": 1, "id": 14},
+            {"lahtoaika": "19:45", "kommentti": "", "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-07", "lounaita": 6, "id": 14},
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-08", "lounaita": 1, "id": 18},
             {"lahtoaika": "16:25", "kommentti": null, "tuloaika": "09:15", "kirjaus": 7.5, "date": "2018-08-09", "lounaita": 1, "id": 15},
             {"lahtoaika": "16:30", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-08-13", "lounaita": 1, "id": 16},
             {"lahtoaika": "18:10", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-08-14", "lounaita": 1, "id": 24},
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:35", "kirjaus": 7.0, "date": "2018-08-15", "lounaita": 1, "id": 148},
-            {"lahtoaika": null, "kommentti": null, "tuloaika": "09:00", "kirjaus": 7.5, "date": "2018-08-16", "lounaita": 1, "id": 149}
+            {"lahtoaika": "16:20", "kommentti": null, "tuloaika": "08:30", "kirjaus": 7.5, "date": "2018-08-16", "lounaita": 1, "id": 149},
+            {"lahtoaika": "15:30", "kommentti": null, "tuloaika": "08:55", "kirjaus": 6.0, "date": "2018-08-17", "lounaita": 1, "id": 303},
+            {"lahtoaika": "17:10", "kommentti": null, "tuloaika": "08:55", "kirjaus": 7.5, "date": "2018-08-20", "lounaita": 1, "id": 304},
+            {"lahtoaika": "19:40", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-08-21", "lounaita": 6, "id": 305},
+            {"lahtoaika": "15:30", "kommentti": "Janin l\u00e4ks\u00e4rit", "tuloaika": "08:55", "kirjaus": 6.0, "date": "2018-08-24", "lounaita": 1, "id": 308},
+            {"lahtoaika": "16:45", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.0, "date": "2018-08-27", "lounaita": 1, "id": 316},
+            {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "08:55", "kirjaus": 7.5, "date": "2018-08-28", "lounaita": 1, "id": 320},
+            {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-08-29", "lounaita": 1, "id": 328},
+            {"lahtoaika": "16:10", "kommentti": "apr pasilassa", "tuloaika": "09:05", "kirjaus": 6.5, "date": "2018-08-30", "lounaita": 1, "id": 330},
+            {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:45", "kirjaus": 7.0, "date": "2018-08-31", "lounaita": 1, "id": 332},
+            {"lahtoaika": null, "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-09-03", "lounaita": 1, "id": 334}
         ];
     data.merkinnat = laskeMerkintojenMeta(merkinnat);
 }
@@ -176,6 +186,9 @@ const Tuntikirjanpito = {
         data.merkinnat = laskeMerkintojenMeta(data.merkinnat);
     }
 };
+
+export const v2018alkusaldo = 18.0;
+export const v2018alkuvirhe = 0;
 
 
 export default Tuntikirjanpito;
