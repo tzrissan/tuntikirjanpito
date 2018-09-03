@@ -88,8 +88,8 @@
                     <td colspan="10" class="rajoitus">
                         <div class="clickable"
                              v-for="sivukoko in local.sivukoot"
-                             v-bind:key="sivukoko"
-                             v-on:click="valitseSivukoko(sivukoko)">{{ sivukoko }}</div>
+                             v-bind:key="sivukoko.name"
+                             v-on:click="valitseSivukoko(sivukoko)">{{ sivukoko.name }}</div>
                     </td>
                 </tr>
                 </tbody>
@@ -102,10 +102,29 @@
 
     import _ from 'lodash';
     import axios from 'axios';
+    import moment from 'moment';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {formatTimeFromString} from '../date-time-util';
     import {v2018alkusaldo, v2018alkuvirhe} from '../data';
+
+    const sivukoot = (() => {
+        function sivukoko(name, filterFn) {
+            return { name, filterFn }
+        }
+        function filter(merkinta, f) {
+            const limit = f(moment(merkinta[0].date)).startOf('day');
+            return p => moment(p.date).isAfter(limit);
+        }
+        return [
+            sivukoko('viikko', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'week')))),
+            sivukoko('kk', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'month')))),
+            sivukoko('3kk', paivat => paivat.filter(filter(paivat, m => m.subtract(3, 'month')))),
+            sivukoko('6kk', paivat => paivat.filter(filter(paivat, m => m.subtract(6, 'month')))),
+            sivukoko('vuosi', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'year')))),
+        ]
+    })();
+
 
     export default {
         name: 'Paivat',
@@ -143,7 +162,7 @@
                     return _.sortBy(paivat, ['date', 'tuloaika']).reverse();
                 }
 
-                return laskevassaJarjestyksessa(
+                return this.local.sivukoko.filterFn(laskevassaJarjestyksessa(
                     laskePaivienMeta(
                         _.chain(this.global.merkinnat)
                             .groupBy('date')
@@ -156,7 +175,7 @@
                             })
                             .value()
                     )
-                ).slice(0, this.local.sivukoko);
+                ));
             }
         },
         methods: {
@@ -213,8 +232,8 @@
                 local: {
                     editId: undefined,
                     uusi: false,
-                    sivukoko: 20,
-                    sivukoot: [ 20, 60, 120, 220 ]
+                    sivukoko: sivukoot[1],
+                    sivukoot
                 }
             }
         }
