@@ -64,15 +64,17 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
 }
 
 export function kaikkiViikotTapahtumienValilla(merkinnat = []) {
-    const ekaPaiva = merkinnat.reduce((a, m) => {
+    const ekaPaiva = moment(merkinnat.reduce((a, m) => {
         const d = moment(m.date);
         return _.isUndefined(a) || d.isBefore(a) ? d : a;
-    }, undefined);
+    }, undefined));
+    ekaPaiva.startOf('week');
 
-    const vikaPaiva = merkinnat.reduce((a, m) => {
+    const vikaPaiva = moment(merkinnat.reduce((a, m) => {
         const d = moment(m.date);
         return _.isUndefined(a) || d.isAfter(a) ? d : a;
-    }, undefined);
+    }, undefined));
+    vikaPaiva.endOf('week');
 
     const viikot = [];
     for (let i = moment(ekaPaiva); i.isBefore(vikaPaiva); i = i.add(7, 'days')) {
