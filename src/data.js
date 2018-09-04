@@ -188,8 +188,8 @@ const Tuntikirjanpito = {
     }
 };
 
-export const v2018alkusaldo = 18.0;
-export const v2018alkuvirhe = 0;
+export const saldoAikojenAlussa = 4.0;
+export const virheAikojenAlussa = 0;
 export const beginningOfTime = '2000-01-01';
 export const endOfTime = '2100-12-31';
 

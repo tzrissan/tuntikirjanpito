@@ -43,7 +43,7 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {v2018alkusaldo} from '../data';
+    import {saldoAikojenAlussa} from '../data';
 
     export default {
         name: 'Viikot',
@@ -70,7 +70,7 @@
                     })
                     .sortBy('alku')
                     .map((viikko, idx, all) => {
-                        viikko.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
+                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
                         return viikko;
                     })
                     .reverse()

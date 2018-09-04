@@ -107,7 +107,7 @@
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {formatTimeFromString} from '../date-time-util';
-    import {v2018alkusaldo, v2018alkuvirhe} from '../data';
+    import {saldoAikojenAlussa, virheAikojenAlussa} from '../data';
 
     const sivukoot = (() => {
         function sivukoko(name, filterFn) {
@@ -153,10 +153,10 @@
                             paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
                             paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
                             paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.kirjaus);
-                            paiva.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
+                            paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
                             paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
                             paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
-                            paiva.kirjausvirhe = (idx ? all[idx - 1].kirjausvirhe : v2018alkuvirhe) + (_.isNaN(paiva.kirjausvirheenmuutos) ? 0 : paiva.kirjausvirheenmuutos);
+                            paiva.kirjausvirhe = (idx ? all[idx - 1].kirjausvirhe : virheAikojenAlussa) + (_.isNaN(paiva.kirjausvirheenmuutos) ? 0 : paiva.kirjausvirheenmuutos);
 
                             return paiva;
                         })

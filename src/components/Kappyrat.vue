@@ -20,7 +20,7 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {beginningOfTime, endOfTime, v2018alkusaldo} from '../data';
+    import {beginningOfTime, endOfTime, saldoAikojenAlussa} from '../data';
 
     const tarkkuudet = (()=>{
         const aikavali = (nimi, step, format) => ({ nimi, step, format });
@@ -63,7 +63,7 @@
                     maintainAspectRatio: false,
                     scales: {
                         yAxes: [
-                            {id: 'saldo', type: 'linear', position: 'left', ticks: {min: 0}},
+                            {id: 'saldo', type: 'linear', position: 'left' },
                             {id: 'kirjaus', type: 'linear', position: 'right', gridLines: {display: false}}
                         ]
                     },
@@ -93,7 +93,7 @@
                     })
                     .sortBy('alku')
                     .map((viikko, idx, all) => {
-                        viikko.saldo = (idx ? all[idx - 1].saldo : v2018alkusaldo) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
+                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
                         return viikko;
                     })
                     .value();
