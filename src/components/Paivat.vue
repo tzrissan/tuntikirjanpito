@@ -113,9 +113,13 @@
         function sivukoko(name, filterFn) {
             return { name, filterFn }
         }
-        function filter(paiva, f) {
-            const limit = f(moment(paiva[0].date)).startOf('day');
-            return p => moment(p.date).isAfter(limit);
+        function filter(paivat, f) {
+            if (paivat && paivat.length > 0) {
+                const limit = f(moment(paivat[0].date)).startOf('day');
+                return p => moment(p.date).isAfter(limit);
+            } else {
+                return () => false;
+            }
         }
         return [
             sivukoko('nimi', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'week')))),
