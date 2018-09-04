@@ -1,16 +1,15 @@
 <template>
     <div class="chart">
         <div>
-            <!-- label>Aikaväli</label><input type="date"/>-<input type="date"/ -->
+            <label>Aikaväli</label><input v-model="local.alku" type="date"/>-<input v-model="local.loppu" type="date"/>
             <label>Tarkkus</label>
             <select v-model="local.tarkkuus">
                 <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
             </select>
-            {{ local.aikavali }}
         </div>
         <BarChart
-                v-bind:data="chartData"
-                v-bind:options="chartOptions"></BarChart>
+            v-bind:data="chartData"
+            v-bind:options="chartOptions" />
     </div>
 </template>
 
@@ -21,7 +20,7 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {v2018alkusaldo} from '../data';
+    import {beginningOfTime, endOfTime, v2018alkusaldo} from '../data';
 
     const tarkkuudet = (()=>{
         const aikavali = (nimi, step, format) => ({ nimi, step, format });
@@ -75,10 +74,15 @@
             },
             chartData() {
                 const format = this.local.tarkkuus.format;
-                const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
+                const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
+                const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
+                const merkinnat = _.filter(this.global.merkinnat, m => {
+                    return moment(m.date).isBetween(alku, loppu);
+                });
+                const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(merkinnat, this.local.tarkkuus.step))
                     .map(aikavali => {
                         aikavali.nimi = aikavali.alku.format(format);
-                        aikavali.merkinnat = this.global.merkinnat.filter(m => moment(m.date).isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
+                        aikavali.merkinnat = merkinnat.filter(m => moment(m.date).isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
                         return aikavali;
                     })
                     .map(aikavali => {
@@ -128,7 +132,9 @@
                 global: Tuntikirjanpito.get(),
                 local: {
                     tarkkuus: tarkkuudet[1],
-                    tarkkuudet
+                    tarkkuudet,
+                    alku: moment().subtract(1, 'quarter').format('YYYY-MM-DD'),
+                    loppu: moment().format('YYYY-MM-DD')
                 }
             }
         }
@@ -158,6 +164,15 @@
     .active {
         font-size: large;
         font-weight: bold;
+    }
+
+    .chart label {
+        padding: 0 10px;
+    }
+
+    .chart input {
+        padding: 0 10px;
+        margin: 0 5px;
     }
 
 </style>
