@@ -15,8 +15,15 @@ function laskeMerkintojenMeta(merkinnat) {
     return merkinnat;
 }
 
-if (!PROD) {
-    const merkinnat = [
+if (PROD) {
+    axios.create().get('/tunnit.data')
+        .then((response) => {
+            const merkinnat = response.data;
+            data.merkinnat = laskeMerkintojenMeta(merkinnat);
+        });
+} else {
+    setTimeout(function(){
+        const merkinnat = [
             {"lahtoaika": "16:50", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-01-02", "lounaita": 1, "id": 159},
             {"lahtoaika": "17:30", "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-01-03", "lounaita": 2, "id": 160},
             {"lahtoaika": "17:00", "kommentti": null, "tuloaika": "09:05", "kirjaus": 7.5, "date": "2018-01-04", "lounaita": 1, "id": 161},
@@ -168,15 +175,9 @@ if (!PROD) {
             {"lahtoaika": "16:00", "kommentti": null, "tuloaika": "08:45", "kirjaus": 7.0, "date": "2018-08-31", "lounaita": 1, "id": 332},
             {"lahtoaika": null, "kommentti": null, "tuloaika": "09:10", "kirjaus": 7.5, "date": "2018-09-03", "lounaita": 1, "id": 334}
         ];
-    data.merkinnat = laskeMerkintojenMeta(merkinnat);
-}
-
-
-axios.create().get('/tunnit.data')
-    .then((response) => {
-        const merkinnat = response.data;
         data.merkinnat = laskeMerkintojenMeta(merkinnat);
-    });
+    }, 1500);
+}
 
 const Tuntikirjanpito = {
     get() {
