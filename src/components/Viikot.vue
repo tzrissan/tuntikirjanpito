@@ -70,10 +70,11 @@
         name: 'Viikot',
         computed: {
             computedViikot() {
-                const pyhat = this.global.pyhat.map(p => p.paiva);
+                const pyhat = this.global.pyhat.map(p => p.date);
+                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf('week'));
                 return this.local.sivukoko.filterFn(_.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => {
-                        viikko.merkinnat = this.global.merkinnat.filter(m => m.paiva.isBetween(viikko.alku, viikko.loppu, null, '[]'));
+                        viikko.merkinnat = merkinnatRyhmiteltyna[viikko.alku] || [];
                         return viikko;
                     })
                     .map(viikko => {
@@ -88,11 +89,9 @@
                         viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
                         viikko.tyopaivia = _.chain(viikko.merkinnat)
                             .filter(m => m.paiva.weekday() < 5)
-                            .filter(m => {
-                                return !pyhat.some(p => p.isSame(m.paiva, 'day'))
-                            })
                             .map(m => m.date)
                             .uniq()
+                            .filter(m => !pyhat.includes(m.paiva))
                             .value().length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
                         return viikko;
