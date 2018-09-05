@@ -63,8 +63,28 @@
                     maintainAspectRatio: false,
                     scales: {
                         yAxes: [
-                            {id: 'saldo', type: 'linear', position: 'left' },
-                            {id: 'kirjaus', type: 'linear', position: 'right', gridLines: {display: false}}
+                            {
+                                id: 'saldo',
+                                position: 'left',
+                                ticks: {
+                                    min: 0
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'saldo'
+                                }
+                            },
+                            {
+                                id: 'kirjaus',
+                                position: 'right',
+                                gridLines: {
+                                    display: false
+                                },
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'kirjaus'
+                                }
+                            }
                         ]
                     },
                     legend: {
@@ -76,18 +96,15 @@
                 const format = this.local.tarkkuus.format;
                 const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
-                const merkinnat = _.filter(this.global.merkinnat, m => {
-                    return m.paiva.isBetween(alku, loppu);
-                });
-                const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(merkinnat, this.local.tarkkuus.step))
+                const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
                     .map(aikavali => {
                         aikavali.nimi = aikavali.alku.format(format);
-                        aikavali.merkinnat = merkinnat.filter(m => m.paiva.isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
+                        aikavali.merkinnat = this.global.merkinnat.filter(m => m.paiva.isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
                         return aikavali;
                     })
                     .map(aikavali => {
                         aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        aikavali.tyopaivia = _.chain(aikavali.merkinnat).map(m => m.date).uniq().value().length;
+                        aikavali.tyopaivia = _.chain(aikavali.merkinnat).filter(m => m.paiva.weekday() < 5).map(m => m.date).uniq().value().length;
                         aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
                         return aikavali;
                     })
@@ -96,6 +113,7 @@
                         viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
                         return viikko;
                     })
+                    .filter(aikavali => aikavali.alku.isBetween(alku, loppu, null, '[]'))
                     .value();
 
                 return {
@@ -105,24 +123,31 @@
                         type: 'line',
                         borderColor: CHART_COLORS.blue(),
                         backgroundColor: CHART_COLORS.blue(0.6),
-                        data: aikavalit.map(viikko => viikko.saldo),
-                        yAxisID: "saldo"
+                        data: aikavalit.map(aikavali => aikavali.saldo),
+                        yAxisID: "saldo",
+                        lineTension: 0.15,
+                        radius: aikavalit.length > 50 ? 0 : 3
                     },{
                         label: 'Kirjaus',
                         type: 'line',
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: aikavalit.map(viikko => viikko.kirjausYhteensa),
-                        yAxisID: "kirjaus"
+                        data: aikavalit.map(aikavali => aikavali.kirjausYhteensa),
+                        yAxisID: "kirjaus",
+                        lineTension: 0.15,
+                        radius: aikavalit.length > 50 ? 0 : 3
                     },{
-                        label: 'Normiviikko',
+                        label: 'Normikirjaus',
                         type: 'line',
                         borderColor: CHART_COLORS.yellow(),
                         backgroundColor: CHART_COLORS.yellow(0.6),
                         fill: false,
-                        data: aikavalit.map(viikko => viikko.tyopaivia * 7.5),
-                        yAxisID: "kirjaus"
+                        data: aikavalit.map(aikavali => aikavali.tyopaivia * 7.5),
+                        yAxisID: "kirjaus",
+                        hidden: true,
+                        lineTension: 0.15,
+                        radius: aikavalit.length > 50 ? 0 : 3
                     }]
                 }
             }

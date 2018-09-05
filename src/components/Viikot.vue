@@ -85,7 +85,7 @@
                             }
                         );
                         viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        viikko.tyopaivia = _.chain(viikko.merkinnat).map(m => m.date).uniq().value().length;
+                        viikko.tyopaivia = _.chain(viikko.merkinnat).filter(m => m.paiva.weekday() < 5).map(m => m.date).uniq().value().length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
                         return viikko;
                     })
