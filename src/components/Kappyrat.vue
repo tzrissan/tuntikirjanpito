@@ -1,6 +1,10 @@
 <template>
     <div class="chart">
         <div>
+            <button type="button" v-on:click="vuodenAlusta()">vuoden alusta</button>
+            <button type="button" v-on:click="yksiVuosi()">1v</button>
+            <button type="button" v-on:click="kvartteri()">1/4v</button>
+            <button type="button" v-on:click="kuukausi()">kk</button>
             <label>Aikaväli</label><input v-model="local.alku" type="date"/>-<input v-model="local.loppu" type="date"/>
             <label>Tarkkus</label>
             <select v-model="local.tarkkuus">
@@ -146,7 +150,7 @@
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: aikavalit.map(aikavali => aikavali.kirjausYhteensa),
+                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.kirjausYhteensa : undefined),
                         yAxisID: "kirjaus",
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
@@ -156,12 +160,53 @@
                         borderColor: CHART_COLORS.yellow(),
                         backgroundColor: CHART_COLORS.yellow(0.6),
                         fill: false,
-                        data: aikavalit.map(aikavali => aikavali.tyopaivia * 7.5),
+                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.tyopaivia * 7.5 : undefined),
                         yAxisID: "kirjaus",
                         hidden: true,
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
                     }]
+                }
+            }
+        },
+        methods: {
+            vuodenAlusta() {
+                if (this.local.alku) {
+                    this.local.alku = moment(this.local.alku).startOf('year').format('YYYY-MM-DD');
+                } else if (this.local.loppu) {
+                    this.local.alku = moment(this.local.loppu).startOf('year').format('YYYY-MM-DD');
+                } else {
+                    this.local.alku = moment().startOf('year').format('YYYY-MM-DD');
+                }
+            },
+            yksiVuosi() {
+                if (this.local.alku) {
+                    this.local.loppu = moment(this.local.alku).add(1, 'year').format('YYYY-MM-DD');
+                } else if (this.local.loppu) {
+                    this.local.alku = moment(this.local.loppu).subtract(1, 'year').format('YYYY-MM-DD');
+                } else {
+                    this.local.alku = moment().subtract(1, 'year').format('YYYY-MM-DD');
+                    this.local.loppu = moment().format('YYYY-MM-DD');
+                }
+            },
+            kvartteri() {
+                if (this.local.alku) {
+                    this.local.loppu = moment(this.local.alku).add(1, 'quarter').format('YYYY-MM-DD');
+                } else if (this.local.loppu) {
+                    this.local.alku = moment(this.local.loppu).subtract(1, 'quarter').format('YYYY-MM-DD');
+                } else {
+                    this.local.alku = moment().subtract(1, 'quarter').format('YYYY-MM-DD');
+                    this.local.loppu = moment().format('YYYY-MM-DD');
+                }
+            },
+            kuukausi() {
+                if (this.local.alku) {
+                    this.local.loppu = moment(this.local.alku).add(1, 'month').format('YYYY-MM-DD');
+                } else if (this.local.loppu) {
+                    this.local.alku = moment(this.local.loppu).subtract(1, 'month').format('YYYY-MM-DD');
+                } else {
+                    this.local.alku = moment().subtract(1, 'month').format('YYYY-MM-DD');
+                    this.local.loppu = moment().format('YYYY-MM-DD');
                 }
             }
         },
