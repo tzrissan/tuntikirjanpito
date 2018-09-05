@@ -139,9 +139,13 @@
         computed: {
             computedPaivat() {
 
+                const pyhat = this.global.pyhat.map(p => p.paiva);
+
                 function laskeSaldomuutos(pvm, kirjaus=0) {
-                    //FIXME: Tää laskenta ei osaa ottaa vielä pyhäpäiviä huomioon
-                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - (moment(pvm).weekday() < 5 ? 7.5 : 0);
+                    const pyhapaiva = pyhat.some(p => p.isSame(pvm, 'day'));
+                    const viikonloppu = pvm.weekday() > 4;
+                    const oletusKirjaus = viikonloppu || pyhapaiva ? 0 : 7.5;
+                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - oletusKirjaus;
                 }
 
                 function laskePaivienMeta(paivat) {
