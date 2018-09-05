@@ -139,12 +139,10 @@
         computed: {
             computedPaivat() {
 
-                const pyhat = this.global.pyhat.map(p => p.paiva);
+                const pyhat = this.global.pyhat.map(p => p.date);
 
-                function laskeSaldomuutos(pvm, kirjaus=0) {
-                    const pyhapaiva = pyhat.some(p => p.isSame(pvm, 'day'));
-                    const viikonloppu = pvm.weekday() > 4;
-                    const oletusKirjaus = viikonloppu || pyhapaiva ? 0 : 7.5;
+                function laskeSaldomuutos(date, paiva, kirjaus = 0) {
+                    const oletusKirjaus = paiva.weekday() > 4 || pyhat.includes(date) ? 0 : 7.5;
                     return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - oletusKirjaus;
                 }
 
@@ -157,7 +155,7 @@
                         .map((paiva, idx, all) => {
                             paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
                             paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
-                            paiva.saldomuutos = laskeSaldomuutos(paiva.paiva, paiva.kirjaus);
+                            paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.paiva, paiva.kirjaus);
                             paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
                             paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
                             paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
