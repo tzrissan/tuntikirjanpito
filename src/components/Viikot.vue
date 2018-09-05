@@ -91,7 +91,7 @@
                             .filter(m => m.paiva.weekday() < 5)
                             .map(m => m.date)
                             .uniq()
-                            .filter(m => !pyhat.includes(m.paiva))
+                            .filter(d => !pyhat.includes(d))
                             .value().length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
                         return viikko;

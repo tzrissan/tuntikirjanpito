@@ -116,7 +116,7 @@
                             .filter(m => m.paiva.weekday() < 5)
                             .map(m => m.date)
                             .uniq()
-                            .filter(d => !pyhat.includes(d.date))
+                            .filter(d => !pyhat.includes(d))
                             .value().length;
                         aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
                         return aikavali;
