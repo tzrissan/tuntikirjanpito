@@ -27,9 +27,9 @@
                 <td colspan="11" class="rajoitus">
                     <div class="clickable"
                          v-for="sivukoko in local.sivukoot"
-                         v-bind:key="sivukoko"
+                         v-bind:key="sivukoko.name"
                          v-bind:class="{ active: local.sivukoko === sivukoko}"
-                         v-on:click="local.sivukoko = sivukoko">{{ sivukoko }} viikkoa</div>
+                         v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
                 </td>
             </tr>
             </tbody>
@@ -45,11 +45,32 @@
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {saldoAikojenAlussa} from '../data';
 
+    const sivukoot = (() => {
+        function sivukoko(name, filterFn) {
+            return { name, filterFn }
+        }
+        function filter(viikot, f) {
+            if (viikot && viikot.length > 0) {
+                const limit = f(moment(viikot[0].alku)).startOf('day');
+                return p => p.alku.isAfter(limit);
+            } else {
+                return () => false;
+            }
+        }
+        return [
+            sivukoko('kk', viikot => viikot.filter(filter(viikot, m => m.subtract(1, 'month')))),
+            sivukoko('3kk', viikot => viikot.filter(filter(viikot, m => m.subtract(3, 'month')))),
+            sivukoko('6kk', viikot => viikot.filter(filter(viikot, m => m.subtract(6, 'month')))),
+            sivukoko('vuosi', viikot => viikot.filter(filter(viikot, m => m.subtract(1, 'year')))),
+            sivukoko('kaikki', viikot => viikot)
+        ]
+    })();
+
     export default {
         name: 'Viikot',
         computed: {
             computedViikot() {
-                return _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
+                return this.local.sivukoko.filterFn(_.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => {
                         viikko.merkinnat = this.global.merkinnat.filter(m => moment(m.date).isBetween(viikko.alku, viikko.loppu, null, '[]'));
                         return viikko;
@@ -74,16 +95,15 @@
                         return viikko;
                     })
                     .reverse()
-                    .value()
-                    .splice(0, this.local.sivukoko);
+                    .value());
             }
         },
         data() {
             return {
                 global: Tuntikirjanpito.get(),
                 local: {
-                    sivukoko: 13,
-                    sivukoot: [4, 13, 26, 52]
+                    sivukoko: sivukoot[1],
+                    sivukoot
                 }
             }
         }
