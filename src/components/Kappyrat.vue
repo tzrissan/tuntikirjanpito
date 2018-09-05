@@ -58,6 +58,13 @@
         },
         computed: {
             chartOptions() {
+                function afterDataLimits(axis) {
+                    axis.max = axis.max + 1;
+                    axis.min = axis.min < 0 ? axis.min - 1 :
+                               axis.min === 0 ? -1 :
+                               0;
+                    return axis;
+                }
                 return {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -66,13 +73,11 @@
                             {
                                 id: 'saldo',
                                 position: 'left',
-                                ticks: {
-                                    min: 0
-                                },
                                 scaleLabel: {
                                     display: true,
                                     labelString: 'saldo'
-                                }
+                                },
+                                afterDataLimits
                             },
                             {
                                 id: 'kirjaus',
@@ -83,7 +88,8 @@
                                 scaleLabel: {
                                     display: true,
                                     labelString: 'kirjaus'
-                                }
+                                },
+                                afterDataLimits
                             }
                         ]
                     },
