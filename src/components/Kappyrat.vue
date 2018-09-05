@@ -77,12 +77,12 @@
                 const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
                 const merkinnat = _.filter(this.global.merkinnat, m => {
-                    return moment(m.date).isBetween(alku, loppu);
+                    return m.paiva.isBetween(alku, loppu);
                 });
                 const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(merkinnat, this.local.tarkkuus.step))
                     .map(aikavali => {
                         aikavali.nimi = aikavali.alku.format(format);
-                        aikavali.merkinnat = merkinnat.filter(m => moment(m.date).isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
+                        aikavali.merkinnat = merkinnat.filter(m => m.paiva.isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
                         return aikavali;
                     })
                     .map(aikavali => {

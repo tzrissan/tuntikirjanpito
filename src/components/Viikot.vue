@@ -72,7 +72,7 @@
             computedViikot() {
                 return this.local.sivukoko.filterFn(_.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
                     .map(viikko => {
-                        viikko.merkinnat = this.global.merkinnat.filter(m => moment(m.date).isBetween(viikko.alku, viikko.loppu, null, '[]'));
+                        viikko.merkinnat = this.global.merkinnat.filter(m => m.paiva.isBetween(viikko.alku, viikko.loppu, null, '[]'));
                         return viikko;
                     })
                     .map(viikko => {
@@ -80,7 +80,7 @@
                             n => {
                                 return {
                                     viikonpaiva: n,
-                                    kirjaus: viikko.merkinnat.filter(m => moment(m.date).format('e') === '' + n).reduce((a, m) => a + m.kirjaus, 0)
+                                    kirjaus: viikko.merkinnat.filter(m => m.paiva.weekday() === n).reduce((a, m) => a + m.kirjaus, 0)
                                 }
                             }
                         );

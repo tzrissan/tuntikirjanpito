@@ -116,7 +116,7 @@
         function filter(paivat, f) {
             if (paivat && paivat.length > 0) {
                 const limit = f(moment(paivat[0].date)).startOf('day');
-                return p => moment(p.date).isAfter(limit);
+                return p => p.paiva.isAfter(limit);
             } else {
                 return () => false;
             }
@@ -153,7 +153,7 @@
                         .map((paiva, idx, all) => {
                             paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
                             paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
-                            paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.kirjaus);
+                            paiva.saldomuutos = laskeSaldomuutos(paiva.paiva, paiva.kirjaus);
                             paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
                             paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
                             paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
@@ -176,6 +176,7 @@
                             .map(pair => {
                                 return {
                                     date: pair[0],
+                                    paiva: moment(pair[0]),
                                     merkinnat: _.sortBy(pair[1], ['tuloaika', 'lahtoaika'])
                                 }
                             })

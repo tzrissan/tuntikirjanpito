@@ -1,4 +1,5 @@
 import axios from 'axios';
+import moment from 'moment';
 import { aikavaliMinuutteina } from './date-time-util';
 
 export const PROD = !window.location.href.match(/localhost/);
@@ -9,6 +10,7 @@ const data = {
 
 function laskeMerkintojenMeta(merkinnat) {
     merkinnat.forEach(m => {
+        m.paiva = moment(m.date);
         m.tyoaika = aikavaliMinuutteina(m.tuloaika, m.lahtoaika, m.lounaita, 0);
         m.kirjausvirhe = m.tyoaika - (m.kirjaus * 60);
     });

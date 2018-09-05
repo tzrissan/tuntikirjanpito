@@ -65,14 +65,12 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
 
 export function kaikkiAikavalitTapahtumienValilla(merkinnat = [], step = 'week') {
     const ekaPaiva = moment(merkinnat.reduce((a, m) => {
-        const d = moment(m.date);
-        return _.isUndefined(a) || d.isBefore(a) ? d : a;
+        return _.isUndefined(a) || m.paiva.isBefore(a) ? moment(m.paiva) : a;
     }, undefined));
     ekaPaiva.startOf(step);
 
     const vikaPaiva = moment(merkinnat.reduce((a, m) => {
-        const d = moment(m.date);
-        return _.isUndefined(a) || d.isAfter(a) ? d : a;
+        return _.isUndefined(a) || m.paiva.isAfter(a) ? moment(m.paiva) : a;
     }, undefined));
     vikaPaiva.endOf(step);
 
