@@ -127,6 +127,7 @@
             sivukoko('3kk', paivat => paivat.filter(filter(paivat, m => m.subtract(3, 'month')))),
             sivukoko('6kk', paivat => paivat.filter(filter(paivat, m => m.subtract(6, 'month')))),
             sivukoko('vuosi', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'year')))),
+            sivukoko('kaikki', paivat => paivat)
         ]
     })();
 
@@ -139,8 +140,8 @@
             computedPaivat() {
 
                 function laskeSaldomuutos(pvm, kirjaus=0) {
-                    //FIXME: Nyt oletetaan aina olevan arkipäivä. Ota la/su/pyhät yms huomioon
-                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - 7.5;
+                    //FIXME: Tää laskenta ei osaa ottaa vielä pyhäpäiviä huomioon
+                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - (moment(pvm).weekday() < 5 ? 7.5 : 0);
                 }
 
                 function laskePaivienMeta(paivat) {
