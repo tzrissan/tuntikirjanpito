@@ -102,22 +102,21 @@
                 const format = this.local.tarkkuus.format;
                 const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
-                const pyhat = this.global.pyhat.map(p => p.paiva);
+                const pyhat = this.global.pyhat.map(p => p.date);
+                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf(this.local.tarkkuus.step));
                 const aikavalit  = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
                     .map(aikavali => {
                         aikavali.nimi = aikavali.alku.format(format);
-                        aikavali.merkinnat = this.global.merkinnat.filter(m => m.paiva.isBetween(aikavali.alku, aikavali.loppu, null, '[]'));
+                        aikavali.merkinnat = merkinnatRyhmiteltyna[aikavali.alku] || [];
                         return aikavali;
                     })
                     .map(aikavali => {
                         aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
                         aikavali.tyopaivia = _.chain(aikavali.merkinnat)
                             .filter(m => m.paiva.weekday() < 5)
-                            .filter(m => {
-                                return !pyhat.some(p => p.isSame(m.paiva, 'day'))
-                            })
                             .map(m => m.date)
                             .uniq()
+                            .filter(d => !pyhat.includes(d.date))
                             .value().length;
                         aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
                         return aikavali;
