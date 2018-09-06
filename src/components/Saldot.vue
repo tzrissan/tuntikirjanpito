@@ -1,12 +1,15 @@
 <template>
     <div class="chart">
         <div>
-            <button type="button" v-on:click="vuodenAlusta()">vuoden alusta</button>
-            <button type="button" v-on:click="yksiVuosi()">1v</button>
-            <button type="button" v-on:click="kvartteri()">1/4v</button>
-            <button type="button" v-on:click="kuukausi()">kk</button>
-            <label>Aikaväli</label><button type="button" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>-<input v-model="local.loppu" type="date"/><button type="button" v-on:click="myohemmin()">&gt;</button>
-            <label>Tarkkus</label>
+            <div class="buttongroup">
+                <button type="button" v-on:click="vuodenAlusta()">vuoden alusta</button>
+                <button type="button" v-on:click="yksiVuosi()">1v</button>
+                <button type="button" v-on:click="kvartteri()">1/4v</button>
+                <button type="button" v-on:click="kuukausi()">kk</button>
+            </div>
+            <button type="button" class="aiemmin" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>
+            -
+            <input v-model="local.loppu" type="date"/><button type="button" class="myohemmin" v-on:click="myohemmin()">&gt;</button>
             <select v-model="local.tarkkuus">
                 <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
             </select>
@@ -56,7 +59,7 @@
     };
 
     export default {
-        name: 'Kappyrat',
+        name: 'Saldot',
         components: {
             BarChart
         },
@@ -182,11 +185,11 @@
             },
             yksiVuosi() {
                 if (this.local.alku) {
-                    this.local.loppu = moment(this.local.alku).add(1, 'year').format('YYYY-MM-DD');
+                    this.local.loppu = moment(this.local.alku).add(1, 'year').subtract(1, 'day').format('YYYY-MM-DD');
                 } else if (this.local.loppu) {
-                    this.local.alku = moment(this.local.loppu).subtract(1, 'year').format('YYYY-MM-DD');
+                    this.local.alku = moment(this.local.loppu).subtract(1, 'year').add(1, 'day').format('YYYY-MM-DD');
                 } else {
-                    this.local.alku = moment().subtract(1, 'year').format('YYYY-MM-DD');
+                    this.local.alku = moment().subtract(1, 'year').add(1, 'day').format('YYYY-MM-DD');
                     this.local.loppu = moment().format('YYYY-MM-DD');
                 }
             },
@@ -212,14 +215,14 @@
             },
             aiemmin() {
                 if (this.local.alku && this.local.loppu) {
-                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'));
+                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'))+1;
                     this.local.alku = moment(this.local.alku).subtract(valinPituus, 'days').format('YYYY-MM-DD');
                     this.local.loppu = moment(this.local.loppu).subtract(valinPituus, 'days').format('YYYY-MM-DD');
                 }
             },
             myohemmin() {
                 if (this.local.alku && this.local.loppu) {
-                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'));
+                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'))+1;
                     this.local.alku = moment(this.local.alku).add(valinPituus, 'days').format('YYYY-MM-DD');
                     this.local.loppu = moment(this.local.loppu).add(valinPituus, 'days').format('YYYY-MM-DD');
                 }
@@ -269,8 +272,48 @@
     }
 
     .chart input {
-        padding: 0 10px;
-        margin: 0 5px;
+        border: 1px solid black;
+        padding: 1px 10px;
+        margin: 0;
+    }
+
+    .chart select {
+        height: 24px;
+        border: 1px solid black;
+        background-color: white;
+        padding: 3px 10px;
+        margin: 0 10px;
+        vertical-align: bottom;
+    }
+
+    button {
+        height: 24px;
+        color: grey;
+        border: 1px solid lightgray;
+        background-color: white;
+        padding: 3px 10px;
+    }
+
+    button:hover {
+        color: black;
+        border-color: black;
+    }
+
+    .aiemmin {
+        margin-right: 1px;
+        border-right: none;
+        padding: 3px;
+    }
+
+    .myohemmin {
+        margin-left: 1px;
+        border-left: none;
+        padding: 3px;
+    }
+
+    .buttongroup {
+        display: inline;
+        margin: 0 10px;
     }
 
 </style>
