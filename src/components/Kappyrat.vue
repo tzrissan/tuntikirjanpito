@@ -5,7 +5,7 @@
             <button type="button" v-on:click="yksiVuosi()">1v</button>
             <button type="button" v-on:click="kvartteri()">1/4v</button>
             <button type="button" v-on:click="kuukausi()">kk</button>
-            <label>Aikaväli</label><input v-model="local.alku" type="date"/>-<input v-model="local.loppu" type="date"/>
+            <label>Aikaväli</label><button type="button" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>-<input v-model="local.loppu" type="date"/><button type="button" v-on:click="myohemmin()">&gt;</button>
             <label>Tarkkus</label>
             <select v-model="local.tarkkuus">
                 <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
@@ -32,7 +32,7 @@
             aikavali('paiva', 'day', 'D.M.Y'),
             aikavali('viikko', 'week', 'w/gg'),
             aikavali('kuukausi', 'month', 'M/YY'),
-            aikavali('3kk', 'quarter', 'Q/YY'),
+            aikavali('3kk', 'quarter', '[Q]Q/YY'),
             aikavali('vuosi', 'year', 'YYYY')
         ]
     })();
@@ -116,6 +116,7 @@
                     })
                     .map(aikavali => {
                         aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
+                        aikavali.ylityo = aikavali.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
                         aikavali.tyopaivia = _.chain(aikavali.merkinnat)
                             .filter(m => m.paiva.weekday() < 5)
                             .map(m => m.date)
@@ -126,9 +127,9 @@
                         return aikavali;
                     })
                     .sortBy('alku')
-                    .map((viikko, idx, all) => {
-                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
-                        return viikko;
+                    .map((aikavali, idx, all) => {
+                        aikavali.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(aikavali.saldomuutos) ? 0 : aikavali.saldomuutos) - aikavali.ylityo;
+                        return aikavali;
                     })
                     .filter(aikavali => aikavali.alku.isBetween(alku, loppu, null, '[]'))
                     .value();
@@ -207,6 +208,20 @@
                 } else {
                     this.local.alku = moment().subtract(1, 'month').format('YYYY-MM-DD');
                     this.local.loppu = moment().format('YYYY-MM-DD');
+                }
+            },
+            aiemmin() {
+                if (this.local.alku && this.local.loppu) {
+                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'));
+                    this.local.alku = moment(this.local.alku).subtract(valinPituus, 'days').format('YYYY-MM-DD');
+                    this.local.loppu = moment(this.local.loppu).subtract(valinPituus, 'days').format('YYYY-MM-DD');
+                }
+            },
+            myohemmin() {
+                if (this.local.alku && this.local.loppu) {
+                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'));
+                    this.local.alku = moment(this.local.alku).add(valinPituus, 'days').format('YYYY-MM-DD');
+                    this.local.loppu = moment(this.local.loppu).add(valinPituus, 'days').format('YYYY-MM-DD');
                 }
             }
         },

@@ -87,6 +87,7 @@
                             }
                         );
                         viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
+                        viikko.ylityo = viikko.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
                         viikko.tyopaivia = _.chain(viikko.merkinnat)
                             .filter(m => m.paiva.weekday() < 5)
                             .map(m => m.date)
@@ -99,6 +100,7 @@
                     .sortBy('alku')
                     .map((viikko, idx, all) => {
                         viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
+                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos) - viikko.ylityo;
                         return viikko;
                     })
                     .reverse()

@@ -154,9 +154,10 @@
                         .sortBy('date')
                         .map((paiva, idx, all) => {
                             paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
+                            paiva.ylityo = paiva.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
                             paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
                             paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.paiva, paiva.kirjaus);
-                            paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos);
+                            paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos) - paiva.ylityo;
                             paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
                             paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
                             paiva.kirjausvirhe = (idx ? all[idx - 1].kirjausvirhe : virheAikojenAlussa) + (_.isNaN(paiva.kirjausvirheenmuutos) ? 0 : paiva.kirjausvirheenmuutos);
