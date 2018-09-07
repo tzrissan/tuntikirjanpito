@@ -199,7 +199,7 @@ const data = {
 function laskeMerkintojenMeta(merkinnat) {
     merkinnat.forEach(m => {
         m.paiva = moment(m.date);
-        m.tyoaika = aikavaliMinuutteina(m.tuloaika, m.lahtoaika, m.lounaita, 0);
+        m.tyoaika = aikavaliMinuutteina(m.tuloaika, m.lahtoaika, m.lounaita, 0, '-');
         m.kirjausvirhe = m.tyoaika - (m.kirjaus * 60);
     });
     return merkinnat;

@@ -52,7 +52,7 @@ export function tanaan() {
     return `${day}.${month}.${year}`;
 }
 
-export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-') {
+export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = undefined) {
     if (!alku || !loppu) {
         return oletusarvo;
     }
@@ -64,8 +64,8 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
 }
 
 export function minuutitKellonaikana(minuuttia = 0) {
-    const h = minuuttia / 60;
-    const m = minuuttia % 60;
+    const h = Math.trunc(minuuttia / 60);
+    const m = Math.trunc(minuuttia % 60);
     return numeral(h).format('00') + ':' + numeral(m).format('00')
 }
 

@@ -74,6 +74,13 @@
                     },
                     legend: {
                         position: 'bottom'
+                    },
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                return minuutitKellonaikana(tooltipItem.yLabel)
+                            }
+                        }
                     }
                 }
             },
@@ -105,6 +112,17 @@
                         }
                     });
 
+                function avg(listOfValues) {
+                    if (!listOfValues || listOfValues.length === 0) {
+                        return undefined;
+                    } else {
+                        return listOfValues.reduce((a, i) => a + i, 0) / listOfValues.length;
+                    }
+                }
+
+                const avgTuloaika = avg(aikavalit.map(t => t.tuloaika).filter(i => !!i));
+                const avgLahtoaika = avg(aikavalit.map(t => t.lahtoaika).filter(i => !!i));
+
                 return {
                     labels: aikavalit.map(aikavali => aikavali.alku.format('D.M.Y')),
                     datasets: [{
@@ -118,12 +136,32 @@
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
                     }, {
+                        label: 'Tuloaika, KA, ' + minuutitKellonaikana(avgTuloaika),
+                        type: 'line',
+                        borderColor: CHART_COLORS.blue(0.6),
+                        backgroundColor: CHART_COLORS.blue(0.6),
+                        fill: false,
+                        data: aikavalit.map(() => avgTuloaika),
+                        yAxisID: "kellonaika",
+                        lineTension: 0.15,
+                        radius: aikavalit.length > 50 ? 0 : 3
+                    }, {
                         label: 'Lähtöaika',
                         type: 'line',
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
                         data: aikavalit.map(aikavali => aikavali.lahtoaika),
+                        yAxisID: "kellonaika",
+                        lineTension: 0.15,
+                        radius: aikavalit.length > 50 ? 0 : 3
+                    }, {
+                        label: 'Lähtöaika, KA, ' + minuutitKellonaikana(avgLahtoaika),
+                        type: 'line',
+                        borderColor: CHART_COLORS.pink(0.6),
+                        backgroundColor: CHART_COLORS.pink(0.6),
+                        fill: false,
+                        data: aikavalit.map(() => avgLahtoaika),
                         yAxisID: "kellonaika",
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
