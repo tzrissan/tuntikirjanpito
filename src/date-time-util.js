@@ -63,6 +63,12 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = '-')
     return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
 }
 
+export function minuutitKellonaikana(minuuttia = 0) {
+    const h = minuuttia / 60;
+    const m = minuuttia % 60;
+    return numeral(h).format('00') + ':' + numeral(m).format('00')
+}
+
 export function kaikkiAikavalitTapahtumienValilla(merkinnat = [], step = 'week') {
     const ekaPaiva = moment(merkinnat.reduce((a, m) => {
         return _.isUndefined(a) || m.paiva.isBefore(a) ? moment(m.paiva) : a;

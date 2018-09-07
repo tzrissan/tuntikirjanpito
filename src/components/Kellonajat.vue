@@ -10,13 +10,10 @@
             <button type="button" class="aiemmin" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>
             -
             <input v-model="local.loppu" type="date"/><button type="button" class="myohemmin" v-on:click="myohemmin()">&gt;</button>
-            <select v-model="local.tarkkuus">
-                <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
-            </select>
         </div>
         <BarChart
-            v-bind:data="chartData"
-            v-bind:options="chartOptions" />
+                v-bind:data="chartData"
+                v-bind:options="chartOptions" />
     </div>
 </template>
 
@@ -26,19 +23,8 @@
     import BarChart from './BarChart';
     import _ from 'lodash';
     import moment from 'moment';
-    import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {beginningOfTime, endOfTime, saldoAikojenAlussa} from '../data';
-
-    const tarkkuudet = (()=>{
-        const aikavali = (nimi, step, format) => ({ nimi, step, format });
-        return [
-            aikavali('paiva', 'day', 'D.M.Y'),
-            aikavali('viikko', 'week', 'w/gg'),
-            aikavali('kuukausi', 'month', 'M/YY'),
-            aikavali('3kk', 'quarter', '[Q]Q/YY'),
-            aikavali('vuosi', 'year', 'YYYY')
-        ]
-    })();
+    import {aikavaliMinuutteina, kaikkiAikavalitTapahtumienValilla, minuutitKellonaikana} from '../date-time-util';
+    import {beginningOfTime, endOfTime} from '../data';
 
     const CHART_COLORS = {
         green(alpha = 1) {
@@ -59,44 +45,30 @@
     };
 
     export default {
-        name: 'Saldot',
+        name: 'Kellonajat',
         components: {
             BarChart
         },
         computed: {
             chartOptions() {
-                function afterDataLimits(axis) {
-                    axis.max = axis.max + 1;
-                    axis.min = axis.min < 0 ? axis.min - 1 :
-                               axis.min === 0 ? -1 :
-                               0;
-                    return axis;
-                }
                 return {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         yAxes: [
                             {
-                                id: 'saldo',
+                                id: 'kellonaika',
                                 position: 'left',
                                 scaleLabel: {
                                     display: true,
-                                    labelString: 'saldo'
+                                    labelString: 'klo'
                                 },
-                                afterDataLimits
-                            },
-                            {
-                                id: 'kirjaus',
-                                position: 'right',
-                                gridLines: {
-                                    display: false
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'kirjaus'
-                                },
-                                afterDataLimits
+                                ticks: {
+                                    callback: function (label) {
+                                        return "klo " + minuutitKellonaikana(label);
+                                    },
+                                    stepSize: 60
+                                }
                             }
                         ]
                     },
@@ -106,64 +78,53 @@
                 }
             },
             chartData() {
-                const format = this.local.tarkkuus.format;
                 const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
-                const pyhat = this.global.pyhat.map(p => p.date);
-                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf(this.local.tarkkuus.step));
-                const aikavalit = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
-                    .map(aikavali => {
-                        aikavali.nimi = aikavali.alku.format(format);
-                        aikavali.merkinnat = merkinnatRyhmiteltyna[aikavali.alku] || [];
-                        aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        aikavali.ylityo = aikavali.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
-                        aikavali.tyopaivia = _.chain(aikavali.merkinnat)
-                            .filter(m => m.paiva.weekday() < 5)
-                            .map(m => m.date)
-                            .uniq()
-                            .filter(d => !pyhat.includes(d))
-                            .value().length;
-                        aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
-                        return aikavali;
-                    })
-                    .sortBy('alku')
-                    .map((aikavali, idx, all) => {
-                        aikavali.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(aikavali.saldomuutos) ? 0 : aikavali.saldomuutos) - aikavali.ylityo;
-                        return aikavali;
-                    })
-                    .filter(aikavali => aikavali.alku.isBetween(alku, loppu, null, '[]'))
+
+                const tapahtumatAikavalilla = _.filter(this.global.merkinnat, m => m.paiva.isBetween(alku, loppu, null, '[]'));
+
+                const merkinatPaivittain = _.chain(tapahtumatAikavalilla)
+                    .groupBy('date')
+                    .toPairs()
+                    .fromPairs()
                     .value();
 
+                const aikavalit = kaikkiAikavalitTapahtumienValilla(tapahtumatAikavalilla, 'day')
+                    .map(aikavali => {
+                        const merkinnat = merkinatPaivittain[aikavali.alku.format('YYYY-MM-DD')];
+                        if (merkinnat) {
+                            return {
+                                alku: aikavali.alku,
+                                tuloaika: aikavaliMinuutteina('00:00', merkinnat.map(m => m.tuloaika).sort()[0]),
+                                lahtoaika: aikavaliMinuutteina('00:00', merkinnat.map(m => m.lahtoaika).sort().reverse()[0])
+                            }
+                        } else {
+                            return {
+                                alku: aikavali.alku
+                            }
+                        }
+                    });
+
                 return {
-                    labels: aikavalit.map(aikavali => aikavali.nimi),
+                    labels: aikavalit.map(aikavali => aikavali.alku.format('D.M.Y')),
                     datasets: [{
-                        label: 'Tuntisaldo',
+                        label: 'Tuloaika',
                         type: 'line',
                         borderColor: CHART_COLORS.blue(),
                         backgroundColor: CHART_COLORS.blue(0.6),
-                        data: aikavalit.map(aikavali => aikavali.saldo),
-                        yAxisID: "saldo",
+                        fill: false,
+                        data: aikavalit.map(aikavali => aikavali.tuloaika),
+                        yAxisID: "kellonaika",
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
-                    },{
-                        label: 'Kirjaus',
+                    }, {
+                        label: 'Lähtöaika',
                         type: 'line',
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.kirjausYhteensa : undefined),
-                        yAxisID: "kirjaus",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
-                    },{
-                        label: 'Normikirjaus',
-                        type: 'line',
-                        borderColor: CHART_COLORS.yellow(),
-                        backgroundColor: CHART_COLORS.yellow(0.6),
-                        fill: false,
-                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.tyopaivia * 7.5 : undefined),
-                        yAxisID: "kirjaus",
-                        hidden: true,
+                        data: aikavalit.map(aikavali => aikavali.lahtoaika),
+                        yAxisID: "kellonaika",
                         lineTension: 0.15,
                         radius: aikavalit.length > 50 ? 0 : 3
                     }]
@@ -229,8 +190,6 @@
             return {
                 global: Tuntikirjanpito.get(),
                 local: {
-                    tarkkuus: tarkkuudet[1],
-                    tarkkuudet,
                     alku: moment().subtract(1, 'quarter').format('YYYY-MM-DD'),
                     loppu: moment().format('YYYY-MM-DD')
                 }

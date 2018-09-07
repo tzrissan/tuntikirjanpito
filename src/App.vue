@@ -14,11 +14,16 @@
                  v-bind:class="{ active: selectedTab === 'Saldot'}"
                  @click="selectedTab='Saldot'">Saldot
             </div>
+            <div class="tab clickable"
+                 v-bind:class="{ active: selectedTab === 'Kellonajat'}"
+                 @click="selectedTab='Kellonajat'">Kellonajat
+            </div>
         </div>
         <div class="tab-content">
             <Paivat v-if="selectedTab==='Päivät'"/>
             <Viikot v-if="selectedTab==='Viikot'"/>
             <Saldot v-if="selectedTab==='Saldot'"/>
+            <Kellonajat v-if="selectedTab==='Kellonajat'"/>
         </div>
     </div>
 </template>
@@ -27,11 +32,12 @@
     import Paivat from './components/Paivat.vue'
     import Viikot from './components/Viikot.vue'
     import Saldot from './components/Saldot.vue'
+    import Kellonajat from './components/Kellonajat.vue'
 
     export default {
         name: 'app',
         components: {
-            Paivat, Viikot, Saldot
+            Paivat, Viikot, Saldot, Kellonajat
         },
         data() {
             return {
