@@ -10,6 +10,9 @@
             <button type="button" class="aiemmin" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>
             -
             <input v-model="local.loppu" type="date"/><button type="button" class="myohemmin" v-on:click="myohemmin()">&gt;</button>
+            <select v-model="local.tarkkuus">
+                <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
+            </select>
         </div>
         <BarChart
                 v-bind:data="chartData"
@@ -25,6 +28,16 @@
     import moment from 'moment';
     import {aikavaliMinuutteina, kaikkiAikavalitTapahtumienValilla, minuutitKellonaikana} from '../date-time-util';
     import {beginningOfTime, endOfTime} from '../data';
+
+    const tarkkuudet = (()=>{
+        const aikavali = (nimi, pituus) => ({ nimi, pituus });
+        return [
+            aikavali('viikko', 7),
+            aikavali('kuukausi', 30),
+            aikavali('3kk', 91),
+            aikavali('vuosi', 365)
+        ]
+    })();
 
     const CHART_COLORS = {
         green(alpha = 1) {
@@ -43,6 +56,14 @@
             return 'rgb(255, 220, 0,   alpha)'.replace(/alpha/, alpha);
         }
     };
+
+    function avg(listOfValues) {
+        if (!listOfValues || listOfValues.length === 0) {
+            return undefined;
+        } else {
+            return listOfValues.reduce((a, i) => a + i, 0) / listOfValues.length;
+        }
+    }
 
     export default {
         name: 'Kellonajat',
@@ -89,6 +110,10 @@
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
 
                 const tapahtumatAikavalilla = _.filter(this.global.merkinnat, m => m.paiva.isBetween(alku, loppu, null, '[]'));
+                const keskiarvonAlku = moment(alku).subtract(this.local.tarkkuus.pituus, 'day');
+                const tapahtumatKeskiarvonAikavalilla = _.filter(this.global.merkinnat, m => m.paiva.isBetween(keskiarvonAlku, loppu, null, '[]'));
+
+                console.log(tapahtumatKeskiarvonAikavalilla);
 
                 const merkinatPaivittain = _.chain(tapahtumatAikavalilla)
                     .groupBy('date')
@@ -96,42 +121,42 @@
                     .fromPairs()
                     .value();
 
-                const aikavalit = kaikkiAikavalitTapahtumienValilla(tapahtumatAikavalilla, 'day')
-                    .map(aikavali => {
-                        const merkinnat = merkinatPaivittain[aikavali.alku.format('YYYY-MM-DD')];
+                const paivat = kaikkiAikavalitTapahtumienValilla(tapahtumatAikavalilla, 'day')
+                    .map(paiva => {
+                        const merkinnat = merkinatPaivittain[paiva.alku.format('YYYY-MM-DD')];
                         if (merkinnat) {
                             return {
-                                alku: aikavali.alku,
+                                alku: paiva.alku,
                                 tuloaika: aikavaliMinuutteina('00:00', merkinnat.map(m => m.tuloaika).sort()[0]),
                                 lahtoaika: aikavaliMinuutteina('00:00', merkinnat.map(m => m.lahtoaika).sort().reverse()[0])
                             }
                         } else {
                             return {
-                                alku: aikavali.alku
+                                alku: paiva.alku
                             }
                         }
                     });
 
-                function avg(listOfValues) {
-                    if (!listOfValues || listOfValues.length === 0) {
-                        return undefined;
-                    } else {
-                        return listOfValues.reduce((a, i) => a + i, 0) / listOfValues.length;
-                    }
-                }
+                paivat.forEach((v, i, a) => {
+                    const start = Math.max(0, i + 1 - this.local.tarkkuus.pituus);
+                    const end = Math.max(0, i + 1);
 
-                const avgTuloaika = avg(aikavalit.map(t => t.tuloaika).filter(i => !!i));
-                const avgLahtoaika = avg(aikavalit.map(t => t.lahtoaika).filter(i => !!i));
+                    v.avgTuloaika = avg(a.slice(start, end).map(m => m.tuloaika).filter(m => !!m));
+                    v.avgLahtoaika = avg(a.slice(start, end).map(m => m.lahtoaika).filter(m => !!m));
+                });
+
+                const avgTuloaika = avg(paivat.map(t => t.tuloaika).filter(i => !!i));
+                const avgLahtoaika = avg(paivat.map(t => t.lahtoaika).filter(i => !!i));
 
                 return {
-                    labels: aikavalit.map(aikavali => aikavali.alku.format('D.M.Y')),
+                    labels: paivat.map(aikavali => aikavali.alku.format('D.M.Y')),
                     datasets: [{
                         label: 'Tuloaika',
                         type: 'line',
                         borderColor: CHART_COLORS.blue(),
                         backgroundColor: CHART_COLORS.blue(0.6),
                         fill: false,
-                        data: aikavalit.map(aikavali => aikavali.tuloaika),
+                        data: paivat.map(p => p.tuloaika),
                         yAxisID: "kellonaika",
                         steppedLine: 'after',
                         showLine: false
@@ -141,7 +166,17 @@
                         borderColor: CHART_COLORS.blue(0.6),
                         backgroundColor: CHART_COLORS.blue(0.6),
                         fill: false,
-                        data: aikavalit.map(() => avgTuloaika),
+                        hidden: true,
+                        data: paivat.map(() => avgTuloaika),
+                        yAxisID: "kellonaika",
+                        radius: 0
+                    }, {
+                        label: 'Tuloaika, KA ' + this.local.tarkkuus.nimi,
+                        type: 'line',
+                        borderColor: CHART_COLORS.blue(0.6),
+                        backgroundColor: CHART_COLORS.blue(0.6),
+                        fill: false,
+                        data: paivat.map(p => p.avgTuloaika),
                         yAxisID: "kellonaika",
                         radius: 0
                     }, {
@@ -150,7 +185,7 @@
                         borderColor: CHART_COLORS.pink(),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: aikavalit.map(aikavali => aikavali.lahtoaika),
+                        data: paivat.map(p => p.lahtoaika),
                         yAxisID: "kellonaika",
                         showLine: false
                     }, {
@@ -159,7 +194,17 @@
                         borderColor: CHART_COLORS.pink(0.6),
                         backgroundColor: CHART_COLORS.pink(0.6),
                         fill: false,
-                        data: aikavalit.map(() => avgLahtoaika),
+                        hidden: true,
+                        data: paivat.map(() => avgLahtoaika),
+                        yAxisID: "kellonaika",
+                        radius: 0
+                    }, {
+                        label: 'Lähtöaika, KA ' + this.local.tarkkuus.nimi,
+                        type: 'line',
+                        borderColor: CHART_COLORS.pink(0.6),
+                        backgroundColor: CHART_COLORS.pink(0.6),
+                        fill: false,
+                        data: paivat.map(p => p.avgLahtoaika),
                         yAxisID: "kellonaika",
                         radius: 0
                     }]
@@ -225,6 +270,8 @@
             return {
                 global: Tuntikirjanpito.get(),
                 local: {
+                    tarkkuus: tarkkuudet[0],
+                    tarkkuudet,
                     alku: moment().subtract(1, 'quarter').format('YYYY-MM-DD'),
                     loppu: moment().format('YYYY-MM-DD')
                 }
