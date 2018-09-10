@@ -133,8 +133,8 @@
                         fill: false,
                         data: aikavalit.map(aikavali => aikavali.tuloaika),
                         yAxisID: "kellonaika",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
+                        steppedLine: 'after',
+                        showLine: false
                     }, {
                         label: 'Tuloaika, KA, ' + minuutitKellonaikana(avgTuloaika),
                         type: 'line',
@@ -143,8 +143,7 @@
                         fill: false,
                         data: aikavalit.map(() => avgTuloaika),
                         yAxisID: "kellonaika",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
+                        radius: 0
                     }, {
                         label: 'Lähtöaika',
                         type: 'line',
@@ -153,8 +152,7 @@
                         fill: false,
                         data: aikavalit.map(aikavali => aikavali.lahtoaika),
                         yAxisID: "kellonaika",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
+                        showLine: false
                     }, {
                         label: 'Lähtöaika, KA, ' + minuutitKellonaikana(avgLahtoaika),
                         type: 'line',
@@ -163,8 +161,7 @@
                         fill: false,
                         data: aikavalit.map(() => avgLahtoaika),
                         yAxisID: "kellonaika",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
+                        radius: 0
                     }]
                 }
             }
