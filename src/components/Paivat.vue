@@ -23,7 +23,8 @@
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
                             <button type="button" class="cancel" v-on:click="tyhjenna()">&#x2715;</button>
                         </div>
-                        <button v-else type="button" class="edit" v-on:click="edit(paiva)">EDIT</button>
+                        <button v-else-if="isEditable(paiva)"
+                                type="button" class="edit" v-on:click="edit(paiva)">EDIT</button>
                     </td>
                     <td  class="pvm">
                         {{ paiva.date | moment("dd") }}
@@ -63,7 +64,7 @@
                                 <input type="number" class="kirjaus" v-model="merkinta.kirjaus" min="0" step="0.5"/>
                             </div>
                         </div>
-                        <span v-else>{{ paiva.kirjaus }} h</span>
+                        <span v-else-if="paiva.kirjaus">{{ paiva.kirjaus }} h</span>
                     </td>
                     <td class="kirjausvirhe">
                         <small v-if="isEditing(paiva)">
@@ -73,7 +74,7 @@
                     </td>
                     <td class="saldo">
                         <span v-if="isEditing(paiva)"></span>
-                        <span v-else>{{ paiva.saldo | numeral('0.0') }} h </span>
+                        <span v-else-if="paiva.saldo">{{ paiva.saldo | numeral('0.0') }} h </span>
                         <small v-if="paiva.saldomuutos">({{ paiva.saldomuutos | numeral('+0.0') }} h)</small>
                     </td>
                     <td class="kommentti">
@@ -106,7 +107,7 @@
     import moment from 'moment';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
-    import {formatTimeFromString} from '../date-time-util';
+    import {formatTimeFromString, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {saldoAikojenAlussa, virheAikojenAlussa} from '../data';
 
     const sivukoot = (() => {
@@ -171,20 +172,33 @@
                     return _.sortBy(paivat, ['date', 'tuloaika']).reverse();
                 }
 
+                const merkinatPaivittain = _.fromPairs(laskePaivienMeta(
+                    _.chain(this.global.merkinnat)
+                        .groupBy('date')
+                        .toPairs()
+                        .map(pair => {
+                            return {
+                                date: pair[0],
+                                paiva: moment(pair[0]),
+                                merkinnat: _.sortBy(pair[1], ['tuloaika', 'lahtoaika'])
+                            }
+                        })
+                        .value()
+                ).map(pm => {
+                    return [ pm.date, pm ]
+                }));
+
+                const kaikkiPaivat = kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day');
+
                 return this.local.sivukoko.filterFn(laskevassaJarjestyksessa(
-                    laskePaivienMeta(
-                        _.chain(this.global.merkinnat)
-                            .groupBy('date')
-                            .toPairs()
-                            .map(pair => {
-                                return {
-                                    date: pair[0],
-                                    paiva: moment(pair[0]),
-                                    merkinnat: _.sortBy(pair[1], ['tuloaika', 'lahtoaika'])
-                                }
-                            })
-                            .value()
-                    )
+                    kaikkiPaivat.map(paiva => {
+                        const merkinnat = merkinatPaivittain[paiva.alku.format('YYYY-MM-DD')];
+                        return merkinnat ? merkinnat : {
+                            date: paiva.alku.format('YYYY-MM-DD'),
+                            paiva: paiva.alku,
+                            merkinnat: []
+                        }
+                    })
                 ));
             }
         },
@@ -212,8 +226,11 @@
                 this.local.uusi = false;
                 this.local.editId = tyoaika.date;
             },
-            isEditing(tyoaika) {
-                return this.local.editId === tyoaika.date;
+            isEditing(paiva) {
+                return this.local.editId === paiva.date;
+            },
+            isEditable(paiva) {
+                return paiva.merkinnat && paiva.merkinnat.length > 0;
             },
             poista(merkintaId) {
                 const merkinnat = this.global.merkinnat;
