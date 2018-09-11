@@ -12,6 +12,7 @@
                     <th>kirjaus</th>
                     <th><small>työaika<br>- kirjaus</small></th>
                     <th>saldo</th>
+                    <th>&Delta;</th>
                     <th>kommentti</th>
                 </tr>
                 </thead>
@@ -54,7 +55,7 @@
                     </td>
                     <td>
                         <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ merkinta.tyoaika | aikavali2UiStr }} <br></span>
+                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">{{ laskeTyoaika(merkinta) | aikavali2UiStr }} <br></span>
                         </small>
                         <small v-else>{{ paiva.tyoaika | aikavali2UiStr }}</small>
                         </td>
@@ -67,15 +68,17 @@
                         <span v-else-if="paiva.kirjaus">{{ paiva.kirjaus }} h</span>
                     </td>
                     <td class="kirjausvirhe">
-                        <small v-if="isEditing(paiva)">
-                            <span v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">({{ merkinta.kirjausvirhe | aikavali2UiStr }})<br></span>
+                        <small v-if="!isEditing(paiva) && paiva.kirjausvirheenmuutos" v-bind:class="{ alert: paiva.kirjausvirheAlert}">
+                            {{ paiva.kirjausvirheenmuutos | aikavali2UiStr(true) }}
                         </small>
-                        <span v-else>{{ paiva.kirjausvirhe | aikavali2UiStr }} <small v-if="paiva.kirjausvirheenmuutos">({{ paiva.kirjausvirheenmuutos | aikavali2UiStr(true) }})</small></span>
                     </td>
                     <td class="saldo">
-                        <span v-if="isEditing(paiva)"></span>
-                        <span v-else-if="paiva.saldo">{{ paiva.saldo | numeral('0.0') }} h </span>
-                        <small v-if="paiva.saldomuutos">({{ paiva.saldomuutos | numeral('+0.0') }} h)</small>
+                        <span v-if="!isEditing(paiva) && paiva.saldo">{{ paiva.saldo | numeral('0.0') }} h </span>
+                    </td>
+                    <td class="saldo">
+                        <small v-if="!isEditing(paiva) && paiva.saldomuutos"  v-bind:class="{ alert: paiva.saldomuutosAlert}">
+                            {{ paiva.saldomuutos | numeral('+0.0') }} h
+                        </small>
                     </td>
                     <td class="kommentti">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
@@ -86,7 +89,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="10" class="rajoitus">
+                    <td colspan="11" class="rajoitus">
                         <div class="clickable"
                              v-for="sivukoko in local.sivukoot"
                              v-bind:key="sivukoko.name"
@@ -107,8 +110,8 @@
     import moment from 'moment';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
-    import {formatTimeFromString, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {saldoAikojenAlussa, virheAikojenAlussa} from '../data';
+    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
+    import {saldoAikojenAlussa} from '../data';
 
     const sivukoot = (() => {
         function sivukoko(name, filterFn) {
@@ -158,10 +161,11 @@
                             paiva.ylityo = paiva.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
                             paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
                             paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.paiva, paiva.kirjaus);
+                            paiva.saldomuutosAlert = Math.abs(paiva.saldomuutos) > 3;
                             paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos) - paiva.ylityo;
                             paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
                             paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
-                            paiva.kirjausvirhe = (idx ? all[idx - 1].kirjausvirhe : virheAikojenAlussa) + (_.isNaN(paiva.kirjausvirheenmuutos) ? 0 : paiva.kirjausvirheenmuutos);
+                            paiva.kirjausvirheAlert = Math.abs(paiva.kirjausvirheenmuutos) > 15;
 
                             return paiva;
                         })
@@ -247,6 +251,9 @@
             uusiRiviLisatty() {
                 this.local.uusi = false;
                 Tuntikirjanpito.laskeUudestaan();
+            },
+            laskeTyoaika(merkinta) {
+                return aikavaliMinuutteina(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, 0, '-');
             }
         },
         data() {
@@ -385,7 +392,8 @@
     }
 
     .saldo {
-        text-align: right;
+        text-align: left;
+        white-space: nowrap;
     }
 
     .kommentti {
@@ -418,6 +426,11 @@
 
     .active {
         font-size: large;
+        font-weight: bold;
+    }
+
+    .alert {
+        color: red;
         font-weight: bold;
     }
 
