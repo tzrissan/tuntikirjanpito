@@ -110,10 +110,6 @@
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
 
                 const tapahtumatAikavalilla = _.filter(this.global.merkinnat, m => m.paiva.isBetween(alku, loppu, null, '[]'));
-                const keskiarvonAlku = moment(alku).subtract(this.local.tarkkuus.pituus, 'day');
-                const tapahtumatKeskiarvonAikavalilla = _.filter(this.global.merkinnat, m => m.paiva.isBetween(keskiarvonAlku, loppu, null, '[]'));
-
-                console.log(tapahtumatKeskiarvonAikavalilla);
 
                 const merkinatPaivittain = _.chain(tapahtumatAikavalilla)
                     .groupBy('date')
