@@ -10,9 +10,6 @@
             <button type="button" class="aiemmin" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>
             -
             <input v-model="local.loppu" type="date"/><button type="button" class="myohemmin" v-on:click="myohemmin()">&gt;</button>
-            <select v-model="local.tarkkuus">
-                <option v-for="tarkkuus in local.tarkkuudet" v-bind:key="tarkkuus.nimi" v-bind:value="tarkkuus">{{ tarkkuus.nimi }}</option>
-            </select>
         </div>
         <BarChart
             v-bind:data="chartData"
@@ -28,17 +25,6 @@
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {beginningOfTime, endOfTime, saldoAikojenAlussa} from '../data';
-
-    const tarkkuudet = (()=>{
-        const aikavali = (nimi, step, format) => ({ nimi, step, format });
-        return [
-            aikavali('paiva', 'day', 'D.M.Y'),
-            aikavali('viikko', 'week', 'w/gg'),
-            aikavali('kuukausi', 'month', 'M/YY'),
-            aikavali('3kk', 'quarter', '[Q]Q/YY'),
-            aikavali('vuosi', 'year', 'YYYY')
-        ]
-    })();
 
     const CHART_COLORS = {
         green(alpha = 1) {
@@ -106,14 +92,13 @@
                 }
             },
             chartData() {
-                const format = this.local.tarkkuus.format;
                 const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
                 const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
                 const pyhat = this.global.pyhat.map(p => p.date);
-                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf(this.local.tarkkuus.step));
-                const aikavalit = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, this.local.tarkkuus.step))
+                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf('day'));
+                const aikavalit = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day'))
                     .map(aikavali => {
-                        aikavali.nimi = aikavali.alku.format(format);
+                        aikavali.nimi = aikavali.alku.format('D.M.Y');
                         aikavali.merkinnat = merkinnatRyhmiteltyna[aikavali.alku] || [];
                         aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
                         aikavali.ylityo = aikavali.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
@@ -229,8 +214,6 @@
             return {
                 global: Tuntikirjanpito.get(),
                 local: {
-                    tarkkuus: tarkkuudet[1],
-                    tarkkuudet,
                     alku: moment().subtract(1, 'quarter').format('YYYY-MM-DD'),
                     loppu: moment().format('YYYY-MM-DD')
                 }
