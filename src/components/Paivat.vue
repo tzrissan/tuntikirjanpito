@@ -2,24 +2,37 @@
     <div class="hello">
         <form>
             <table>
+                <colgroup>
+                    <col class="toiminnot"/>
+                    <col/>
+                    <col/>
+                    <col/>
+                    <col/>
+                    <col class="toiminnot"/>
+                    <col/>
+                    <col/>
+                    <col/>
+                    <col/>
+                    <col/>
+                </colgroup>
                 <thead>
                 <tr>
-                    <th class="uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</th>
-                    <th colspan="2">pvm</th>
-                    <th>tuloaika - lähtöaika</th>
-                    <th>lounas</th>
-                    <th>työaika</th>
-                    <th>kirjaus</th>
-                    <th><small>työaika<br>- kirjaus</small></th>
-                    <th>saldo</th>
+                    <th class="toiminnot uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</th>
+                    <th colspan="2">Pvm</th>
+                    <th>Tuloaika - <br> Lähtöaika</th>
+                    <th><small>Lounas</small></th>
+                    <th>Työaika</th>
+                    <th>Kirjaus</th>
+                    <th><small>Työaika<br>- Kirjaus</small></th>
+                    <th>Saldo</th>
                     <th>&Delta;</th>
-                    <th>kommentti</th>
+                    <th class="kommentti">kommentti</th>
                 </tr>
                 </thead>
                 <tbody>
                 <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
                 <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date">
-                    <td>
+                    <td class="toiminnot">
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
                             <button type="button" class="cancel" v-on:click="tyhjenna()">&#x2715;</button>
@@ -273,6 +286,15 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
+    col.toiminnot {
+        width: 45px;
+    }
+
+    th.toiminnot, td.toiminnot {
+        padding: 1px 1px 1px 0;
+    }
+
     label {
         display: inline-block;
         width: 100px;
@@ -359,6 +381,7 @@
     }
 
     td {
+        white-space: nowrap;
         padding: 3px 15px;
     }
 
@@ -399,6 +422,16 @@
     .kommentti {
         padding: 2px 5px 2px 10px;
         text-align: left;
+        color: gray;
+        padding-right: 20px;
+    }
+
+    td.kommentti, th.kommentti {
+        border-left: 1px solid lightgrey;
+    }
+
+    input.kommentti {
+        width: calc(100% - 30px);
     }
 
     .pvm {

@@ -2,14 +2,17 @@
     <div>
         <table>
             <thead>
-                <th>Viikko</th>
+                <th>vko</th>
+                <th></th>
                 <th>Ma</th><th>Ti</th><th>Ke</th><th>To</th><th>Pe</th><th>La</th><th>Su</th>
                 <th>Kirjaus</th>
                 <th colspan="2">Saldo</th>
             </thead>
             <tbody>
-            <tr v-for="v in computedViikot" v-bind:key="v.nimi">
-                <td class="viikkonro">vk {{ v.alku | moment("ww") }} <span class="vuosi">-{{ v.alku | moment("gg") }} </span> <span class="paivat">({{ v.alku | moment("D.M") }}-{{ v.loppu | moment("D.M.")}})</span></td>
+            <tr v-for="v in computedViikot" v-bind:key="v.nimi"
+                v-bind:class="{ 'vuoden-alku': v.alku.weeks() === 1}">
+                <td class="viikkonro">{{ v.alku | moment("ww/gg") }}</td>
+                <td class="paivat">{{ v.alku | moment("D.M") }}-{{ v.loppu | moment("D.M.-YY")}}</td>
                 <td class="kirjaus" v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva">
                     <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
                     <span v-else>-</span>
@@ -21,10 +24,10 @@
                     <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }} h</span>
                     <span v-else>-</span>
                 </td>
-                <td class="saldo">{{ v.saldo }} h</td>
+                <td class="saldo">{{ v.saldo | numeral('0.0') }} h</td>
             </tr>
             <tr>
-                <td colspan="11" class="rajoitus">
+                <td colspan="12" class="rajoitus">
                     <div class="clickable"
                          v-for="sivukoko in local.sivukoot"
                          v-bind:key="sivukoko.name"
@@ -158,8 +161,9 @@
         font-size: small;
     }
 
-    .viikkonro .paivat {
+    .paivat {
         font-size: small;
+        text-align: right;
     }
 
     .kirjaus, .kirjausYhteensa, .saldo {
@@ -183,6 +187,10 @@
     .active {
         font-size: large;
         font-weight: bold;
+    }
+
+    .vuoden-alku {
+        border-bottom: 3px double black;
     }
 
 

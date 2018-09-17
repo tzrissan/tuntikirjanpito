@@ -20,7 +20,8 @@
             <input type="number" class="kirjaus" v-model="kirjaus" min="0.0" max="24" step="0.5"/>
             <button type="button" v-on:click="normiTunnit()">7½</button>
         </td>
-        <td colspan="3"><input class="kommentti" type="text" v-model="kommentti"/></td>
+        <td colspan="3"></td>
+        <td><input class="kommentti" type="text" v-model="kommentti"/></td>
     </tr>
 </template>
 
