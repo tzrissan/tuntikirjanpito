@@ -156,60 +156,17 @@
         computed: {
             computedPaivat() {
 
-                const pyhat = this.global.pyhat.map(p => p.date);
-
-                function laskeSaldomuutos(date, paiva, kirjaus = 0) {
-                    const oletusKirjaus = paiva.weekday() > 4 || pyhat.includes(date) ? 0 : 7.5;
-                    return (_.isNumber(kirjaus) && !_.isNaN(kirjaus) ? kirjaus : 0) - oletusKirjaus;
-                }
-
-                function laskePaivienMeta(paivat) {
-                    function sum(acc, n) {
-                        return acc + n;
-                    }
-                    return _.chain(paivat)
-                        .sortBy('date')
-                        .map((paiva, idx, all) => {
-                            paiva.kirjaus = paiva.merkinnat.map(m => m.kirjaus).reduce(sum, 0);
-                            paiva.ylityo = paiva.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
-                            paiva.lounaita = paiva.merkinnat.map(m => m.lounaita).reduce(sum, 0);
-                            paiva.saldomuutos = laskeSaldomuutos(paiva.date, paiva.paiva, paiva.kirjaus);
-                            paiva.saldomuutosAlert = Math.abs(paiva.saldomuutos) > 3;
-                            paiva.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(paiva.saldomuutos) ? 0 : paiva.saldomuutos) - paiva.ylityo;
-                            paiva.tyoaika = paiva.merkinnat.map(m => m.tyoaika).reduce(sum, 0);
-                            paiva.kirjausvirheenmuutos = paiva.tyoaika - (paiva.kirjaus * 60);
-                            paiva.kirjausvirheAlert = Math.abs(paiva.kirjausvirheenmuutos) > 15;
-
-                            return paiva;
-                        })
-                        .value();
-                }
-
                 function laskevassaJarjestyksessa(paivat) {
                     return _.sortBy(paivat, ['date', 'tuloaika']).reverse();
                 }
 
-                const merkinatPaivittain = _.fromPairs(laskePaivienMeta(
-                    _.chain(this.global.merkinnat)
-                        .groupBy('date')
-                        .toPairs()
-                        .map(pair => {
-                            return {
-                                date: pair[0],
-                                paiva: moment(pair[0]),
-                                merkinnat: _.sortBy(pair[1], ['tuloaika', 'lahtoaika'])
-                            }
-                        })
-                        .value()
-                ).map(pm => {
-                    return [ pm.date, pm ]
-                }));
-
                 const kaikkiPaivat = kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day');
+
+                console.log(this.global.merkinnatPaivittain)
 
                 return this.local.sivukoko.filterFn(laskevassaJarjestyksessa(
                     kaikkiPaivat.map(paiva => {
-                        const merkinnat = merkinatPaivittain[paiva.alku.format('YYYY-MM-DD')];
+                        const merkinnat = this.global.merkinnatPaivittain[paiva.alku.format('YYYY-MM-DD')];
                         return merkinnat ? merkinnat : {
                             date: paiva.alku.format('YYYY-MM-DD'),
                             paiva: paiva.alku,
