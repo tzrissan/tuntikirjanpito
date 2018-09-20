@@ -1,15 +1,9 @@
 <template>
     <div class="chart">
         <div>
-            <div class="buttongroup">
-                <button type="button" v-on:click="vuodenAlusta()">vuoden alusta</button>
-                <button type="button" v-on:click="yksiVuosi()">1v</button>
-                <button type="button" v-on:click="kvartteri()">1/4v</button>
-                <button type="button" v-on:click="kuukausi()">kk</button>
-            </div>
-            <button type="button" class="aiemmin" v-on:click="aiemmin()">&lt;</button><input v-model="local.alku" type="date"/>
-            -
-            <input v-model="local.loppu" type="date"/><button type="button" class="myohemmin" v-on:click="myohemmin()">&gt;</button>
+            <select v-model="local.kappyra">
+                <option v-for="kappyra in local.kappyrat" v-bind:key="kappyra.nimi" v-bind:value="kappyra">{{ kappyra.nimi }}</option>
+            </select>
         </div>
         <BarChart
             v-bind:data="chartData"
@@ -24,7 +18,50 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {beginningOfTime, endOfTime, saldoAikojenAlussa} from '../data';
+
+    const kappyrat = (()=>{
+        const kappyra = (nimi, chartData) => ({nimi, chartData});
+        return [
+            kappyra('vuodet', paivat => {
+                const paivamaarat = kaikkiAikavalitTapahtumienValilla([{paiva: moment('2000-01-01')}, {paiva: moment('2000-12-31')}], 'day');
+                const vuodet = paivat ? _.chain(paivat).keys().map(p => p.split('-')[0]).uniq().sort().map(vuosi => ({ vuosi, vari: CHART_COLORS.next() })).value() : [];
+                const oletyksenaNaytetytVuodet = (vuodet.length > 5 ? vuodet.slice(vuodet.length - 3) : vuodet).map(v => v.vuosi);
+                const kuluvaVuosi = moment().year();
+                const paivaNro = moment().dayOfYear();
+                return {
+                    labels: paivamaarat.map(p => p.alku).map(a => a.format('D.M.')),
+                    datasets: _.chain(vuodet)
+                        .map(vuosi => {
+
+                            const data = paivamaarat
+                                .map(pvm => vuosi.vuosi + pvm.alku.format('-MM-DD'))
+                                .map(pvm => paivat[pvm])
+                                .map(paiva => paiva ? paiva.saldo : undefined);
+                            for (let i = 0; i < data.length; i++) {
+                                // Puljataan dataa niin että viivat jatkuu myös datattomien kolojen yli nätisti
+                                data[i] = i > 0 && !data[i] ? data[i - 1] : data[i];
+                                // Poistetaan arvailu tulevasta
+                                if (vuosi.vuosi === '' + kuluvaVuosi && i > paivaNro) {
+                                    data[i] = undefined;
+                                }
+                            }
+                            return {
+                                label: 'Saldo ' + vuosi.vuosi,
+                                type: 'line',
+                                borderColor: vuosi.vari,
+                                backgroundColor: vuosi.vari,
+                                fill: false,
+                                data,
+                                yAxisID: "saldo",
+                                radius: 0,
+                                hidden: !oletyksenaNaytetytVuodet.includes(vuosi.vuosi)
+                            }
+                        })
+                        .value()
+                }
+            })
+        ];
+    })();
 
     const CHART_COLORS = {
         green(alpha = 1) {
@@ -41,7 +78,27 @@
         },
         yellow(alpha = 1) {
             return 'rgb(255, 220, 0,   alpha)'.replace(/alpha/, alpha);
-        }
+        },
+        next(alpha = 1) {
+            this.colorIdx++;
+            const rgb = this.colors[this.colorIdx%this.colors.length].join(', ');
+            return `rgb(${rgb}, ${alpha})`;
+        },
+        current(alpha = 1) {
+            const rgb = this.colors[this.colorIdx%this.colors.length].join(', ');
+            return `rgb(${rgb}, ${alpha})`;
+        },
+        colorIdx: 0,
+        colors: [
+            [255, 0, 0],
+            [255, 128, 0],
+            [152, 255, 51],
+            [51, 152, 255],
+            [51, 51, 255],
+            [152, 51, 255],
+            [255, 51, 255],
+            [0, 0, 0]
+        ]
     };
 
     export default {
@@ -71,18 +128,6 @@
                                     labelString: 'saldo'
                                 },
                                 afterDataLimits
-                            },
-                            {
-                                id: 'kirjaus',
-                                position: 'right',
-                                gridLines: {
-                                    display: false
-                                },
-                                scaleLabel: {
-                                    display: true,
-                                    labelString: 'kirjaus'
-                                },
-                                afterDataLimits
                             }
                         ]
                     },
@@ -92,128 +137,15 @@
                 }
             },
             chartData() {
-                const alku = moment(this.local.alku ? this.local.alku : beginningOfTime);
-                const loppu = moment(this.local.loppu ? this.local.loppu : endOfTime);
-                const pyhat = this.global.pyhat.map(p => p.date);
-                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf('day'));
-                const aikavalit = _.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day'))
-                    .map(aikavali => {
-                        aikavali.nimi = aikavali.alku.format('D.M.Y');
-                        aikavali.merkinnat = merkinnatRyhmiteltyna[aikavali.alku] || [];
-                        aikavali.kirjausYhteensa = aikavali.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        aikavali.ylityo = aikavali.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
-                        aikavali.tyopaivia = _.chain(aikavali.merkinnat)
-                            .filter(m => m.paiva.weekday() < 5)
-                            .map(m => m.date)
-                            .uniq()
-                            .filter(d => !pyhat.includes(d))
-                            .value().length;
-                        aikavali.saldomuutos = aikavali.kirjausYhteensa - (aikavali.tyopaivia * 7.5);
-                        return aikavali;
-                    })
-                    .sortBy('alku')
-                    .map((aikavali, idx, all) => {
-                        aikavali.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(aikavali.saldomuutos) ? 0 : aikavali.saldomuutos) - aikavali.ylityo;
-                        return aikavali;
-                    })
-                    .filter(aikavali => aikavali.alku.isBetween(alku, loppu, null, '[]'))
-                    .value();
-
-                return {
-                    labels: aikavalit.map(aikavali => aikavali.nimi),
-                    datasets: [{
-                        label: 'Tuntisaldo',
-                        type: 'line',
-                        borderColor: CHART_COLORS.blue(),
-                        backgroundColor: CHART_COLORS.blue(0.6),
-                        data: aikavalit.map(aikavali => aikavali.saldo),
-                        yAxisID: "saldo",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
-                    },{
-                        label: 'Kirjaus',
-                        type: 'line',
-                        borderColor: CHART_COLORS.pink(),
-                        backgroundColor: CHART_COLORS.pink(0.6),
-                        fill: false,
-                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.kirjausYhteensa : undefined),
-                        yAxisID: "kirjaus",
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
-                    },{
-                        label: 'Normikirjaus',
-                        type: 'line',
-                        borderColor: CHART_COLORS.yellow(),
-                        backgroundColor: CHART_COLORS.yellow(0.6),
-                        fill: false,
-                        data: aikavalit.map(aikavali => aikavali.merkinnat.length > 0 ? aikavali.tyopaivia * 7.5 : undefined),
-                        yAxisID: "kirjaus",
-                        hidden: true,
-                        lineTension: 0.15,
-                        radius: aikavalit.length > 50 ? 0 : 3
-                    }]
-                }
-            }
-        },
-        methods: {
-            vuodenAlusta() {
-                if (this.local.alku) {
-                    this.local.alku = moment(this.local.alku).startOf('year').format('YYYY-MM-DD');
-                } else if (this.local.loppu) {
-                    this.local.alku = moment(this.local.loppu).startOf('year').format('YYYY-MM-DD');
-                } else {
-                    this.local.alku = moment().startOf('year').format('YYYY-MM-DD');
-                }
-            },
-            yksiVuosi() {
-                if (this.local.alku) {
-                    this.local.loppu = moment(this.local.alku).add(1, 'year').subtract(1, 'day').format('YYYY-MM-DD');
-                } else if (this.local.loppu) {
-                    this.local.alku = moment(this.local.loppu).subtract(1, 'year').add(1, 'day').format('YYYY-MM-DD');
-                } else {
-                    this.local.alku = moment().subtract(1, 'year').add(1, 'day').format('YYYY-MM-DD');
-                    this.local.loppu = moment().format('YYYY-MM-DD');
-                }
-            },
-            kvartteri() {
-                if (this.local.alku) {
-                    this.local.loppu = moment(this.local.alku).add(1, 'quarter').format('YYYY-MM-DD');
-                } else if (this.local.loppu) {
-                    this.local.alku = moment(this.local.loppu).subtract(1, 'quarter').format('YYYY-MM-DD');
-                } else {
-                    this.local.alku = moment().subtract(1, 'quarter').format('YYYY-MM-DD');
-                    this.local.loppu = moment().format('YYYY-MM-DD');
-                }
-            },
-            kuukausi() {
-                if (this.local.alku) {
-                    this.local.loppu = moment(this.local.alku).add(1, 'month').format('YYYY-MM-DD');
-                } else if (this.local.loppu) {
-                    this.local.alku = moment(this.local.loppu).subtract(1, 'month').format('YYYY-MM-DD');
-                } else {
-                    this.local.alku = moment().subtract(1, 'month').format('YYYY-MM-DD');
-                    this.local.loppu = moment().format('YYYY-MM-DD');
-                }
-            },
-            aiemmin() {
-                if (this.local.alku && this.local.loppu) {
-                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'))+1;
-                    this.local.alku = moment(this.local.alku).subtract(valinPituus, 'days').format('YYYY-MM-DD');
-                    this.local.loppu = moment(this.local.loppu).subtract(valinPituus, 'days').format('YYYY-MM-DD');
-                }
-            },
-            myohemmin() {
-                if (this.local.alku && this.local.loppu) {
-                    const valinPituus = Math.abs(moment(this.local.loppu).diff(this.local.alku, 'days'))+1;
-                    this.local.alku = moment(this.local.alku).add(valinPituus, 'days').format('YYYY-MM-DD');
-                    this.local.loppu = moment(this.local.loppu).add(valinPituus, 'days').format('YYYY-MM-DD');
-                }
+                return this.local.kappyra.chartData(this.global.merkinnatPaivittain)
             }
         },
         data() {
             return {
                 global: Tuntikirjanpito.get(),
                 local: {
+                    kappyra: kappyrat[0],
+                    kappyrat,
                     alku: moment().subtract(1, 'quarter').format('YYYY-MM-DD'),
                     loppu: moment().format('YYYY-MM-DD')
                 }
