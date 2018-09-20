@@ -31,7 +31,8 @@
                 </thead>
                 <tbody>
                 <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
-                <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date">
+                <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date"
+                    v-bind:class="{ 'vuoden-eka-paiva': paiva.paiva.dayOfYear() === 1, 'kuukauden-eka-paiva': paiva.paiva.date() === 1}">
                     <td class="toiminnot">
                         <div v-if="isEditing(paiva)">
                             <button type="button" class="submit" v-on:click="tallenna(paiva)">&#x2713;</button>
@@ -124,7 +125,6 @@
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
     import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {saldoAikojenAlussa} from '../data';
 
     const sivukoot = (() => {
         function sivukoko(name, filterFn) {
@@ -161,8 +161,6 @@
                 }
 
                 const kaikkiPaivat = kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day');
-
-                console.log(this.global.merkinnatPaivittain)
 
                 return this.local.sivukoko.filterFn(laskevassaJarjestyksessa(
                     kaikkiPaivat.map(paiva => {
@@ -422,6 +420,14 @@
     .alert {
         color: red;
         font-weight: bold;
+    }
+
+    .kuukauden-eka-paiva {
+        border-bottom: 1px solid black;
+    }
+
+    .vuoden-eka-paiva {
+        border-bottom: 3px double black;
     }
 
 </style>
