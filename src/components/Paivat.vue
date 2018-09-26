@@ -51,8 +51,12 @@
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
                             <template v-if="isEditing(paiva)">
                                 <input type="text" class="tuloaika" minlength="3" maxlength="5" v-model="merkinta.tuloaika"/>
+                                <button type="button" v-on:click="tulinJust(merkinta)">ny</button>
+                                <button type="button" v-on:click="tulinYsilt(merkinta)">9</button>
                                 -
                                 <input type="text" class="lahtoaika" minlength="3" maxlength="5" v-model="merkinta.lahtoaika"/>
+                                <button type="button" v-on:click="meenIhanKohta(merkinta)">ny</button>
+                                <button type="button" v-on:click="meenViidelta(merkinta)">5</button>
                                 <button type="button" class="delete" v-on:click="poista(merkinta.id)">&#x2715;</button>
                             </template>
                             <span v-else>{{ merkinta.tuloaika }} - {{ merkinta.lahtoaika }}<br></span>
@@ -124,7 +128,7 @@
     import moment from 'moment';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
-    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
+    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla, nyt} from '../date-time-util';
 
     const sivukoot = (() => {
         function sivukoko(name, filterFn) {
@@ -222,6 +226,18 @@
             },
             laskeTyoaika(merkinta) {
                 return aikavaliMinuutteina(merkinta.tuloaika, merkinta.lahtoaika, merkinta.lounaita, 0, '-');
+            },
+            tulinJust(merkinta) {
+                merkinta.tuloaika = nyt();
+            },
+            tulinYsilt(merkinta) {
+                merkinta.tuloaika = '09:00';
+            },
+            meenIhanKohta(merkinta) {
+                merkinta.lahtoaika = nyt()
+            },
+            meenViidelta(merkinta) {
+                merkinta.lahtoaika = '17:00';
             }
         },
         data() {
