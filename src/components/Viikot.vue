@@ -10,10 +10,21 @@
             </thead>
             <tbody>
             <tr v-for="v in computedViikot" v-bind:key="v.nimi"
-                v-bind:class="{ 'vuoden-alku': v.alku.weeks() === 1}">
+                v-bind:class="{
+                    'vuoden-vaihto-viikolla': v.vuodenVaihtoViikolla,
+                    'vuoden-vaihto-su-ma': v.vuodenVaihtoSuMa,
+                    'kuukauden-vaihto-viikolla': v.kuukaudenVaihtoViikolla,
+                    'kuukauden-vaihto-su-ma': v.kuukaudenVaihtoSuMa
+                    }">
                 <td class="viikkonro">{{ v.alku | moment("ww/gg") }}</td>
-                <td class="paivat">{{ v.alku | moment("D.M") }}-{{ v.loppu | moment("D.M.-YY")}}</td>
-                <td class="kirjaus" v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva">
+                <td class="paivat">
+                    <template v-if="!v.kuukaudenVaihtoViikolla && !v.vuodenVaihtoViikolla">{{ v.alku | moment("D.") }}-{{ v.loppu | moment("D.M.YYYY")}}</template>
+                    <template v-if="v.kuukaudenVaihtoViikolla && !v.vuodenVaihtoViikolla">{{ v.alku | moment("D.M.") }} - {{ v.loppu | moment("D.M.YYYY")}}</template>
+                    <template v-if="v.vuodenVaihtoViikolla">{{ v.alku | moment("D.M.YYYY") }} - {{ v.loppu | moment("D.M.YYYY")}}</template>
+                </td>
+                <td class="kirjaus"
+                    v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva"
+                    v-bind:class="{ 'kuukauden-alku': paiva.kuukaudenAlku }">
                     <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
                     <span v-else>-</span>
                 </td>
@@ -85,10 +96,15 @@
                             n => {
                                 return {
                                     viikonpaiva: n,
+                                    kuukaudenAlku: viikko.alku.month() !== viikko.loppu.month() && moment(viikko.alku).add(n, 'day').date() === 1,
                                     kirjaus: viikko.merkinnat.filter(m => m.paiva.weekday() === n).reduce((a, m) => a + m.kirjaus, 0)
                                 }
                             }
                         );
+                        viikko.vuodenVaihtoViikolla = viikko.alku.year() !== viikko.loppu.year();
+                        viikko.kuukaudenVaihtoViikolla = viikko.alku.month() !== viikko.loppu.month();
+                        viikko.vuodenVaihtoSuMa = viikko.alku.date()===1 && viikko.alku.month()===0;
+                        viikko.kuukaudenVaihtoSuMa = viikko.alku.date()===1;
                         viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
                         viikko.ylityo = viikko.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
                         viikko.tyopaivia = _.chain(viikko.merkinnat)
@@ -189,7 +205,42 @@
         font-weight: bold;
     }
 
-    .vuoden-alku {
+    .kuukauden-vaihto-viikolla td {
+        border-top: 1px solid grey;
+    }
+
+    .kuukauden-vaihto-viikolla td.kuukauden-alku {
+        border-top: none;
+        border-left: 1px solid gray;
+        border-bottom: 1px solid gray;
+    }
+
+    .kuukauden-vaihto-viikolla td.kuukauden-alku ~ td {
+        border-top: none;
+        border-bottom: 1px solid grey;
+    }
+
+    .vuoden-vaihto-viikolla td {
+        border-top: 3px double black;
+    }
+
+    .vuoden-vaihto-viikolla td.kuukauden-alku {
+        border-top: none;
+        border-left: 3px double black;
+        border-bottom: 3px double black;
+    }
+
+    .vuoden-vaihto-viikolla td.kuukauden-alku ~ td {
+        border-top: none;
+        border-bottom: 3px double black;
+        color: red;
+    }
+
+    .kuukauden-vaihto-su-ma {
+        border-bottom: 1px solid grey;
+    }
+
+    .vuoden-vaihto-su-ma {
         border-bottom: 3px double black;
     }
 
