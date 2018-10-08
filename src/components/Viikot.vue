@@ -235,7 +235,6 @@
     .vuoden-vaihto-viikolla td.kuukauden-alku ~ td {
         border-top: none;
         border-bottom: 3px double black;
-        color: red;
     }
 
     .kuukauden-vaihto-su-ma {
