@@ -5,8 +5,9 @@
                 <th>vko</th>
                 <th></th>
                 <th>Ma</th><th>Ti</th><th>Ke</th><th>To</th><th>Pe</th><th>La</th><th>Su</th>
-                <th>Kirjaus</th>
-                <th colspan="2">Saldo</th>
+                <th class="kirjausYhteensa">Kirjaus</th>
+                <th class="saldo">&Delta;</th>
+                <th class="saldo">Saldo</th>
             </thead>
             <tbody>
             <tr v-for="v in computedViikot" v-bind:key="v.nimi"
@@ -32,10 +33,10 @@
                     <span v-if="v.kirjausYhteensa !== 0">{{ v.kirjausYhteensa | numeral('0.0') }}</span>
                     <span v-else>-</span>
                 <td class="saldo">
-                    <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }} h</span>
+                    <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }}</span>
                     <span v-else>-</span>
                 </td>
-                <td class="saldo">{{ v.saldo | numeral('0.0') }} h</td>
+                <td class="saldo">{{ v.saldo | numeral('0.0') }}</td>
             </tr>
             <tr>
                 <td colspan="12" class="rajoitus">
@@ -150,11 +151,12 @@
     th {
         border-top: 1px solid black;
         border-bottom: 1px solid black;
-        padding: 10px 20px;
+        padding: 7px 10px;
     }
 
     td {
         padding: 3px 15px;
+        white-space: nowrap;
     }
 
     tr:nth-child(even) {
