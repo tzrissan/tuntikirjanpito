@@ -60,26 +60,33 @@
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
     import {saldoAikojenAlussa} from '../data';
 
-    const sivukoot = (() => {
+    const sivukoot = merkinnat => {
         function sivukoko(name, filterFn) {
             return { name, filterFn }
         }
-        function filter(viikot, f) {
+        function between(viikot, after, before) {
             if (viikot && viikot.length > 0) {
-                const limit = f(moment(viikot[0].alku)).startOf('day');
-                return p => p.alku.isAfter(limit);
+                const afterMoment = after && after(moment(viikot[0].alku)).startOf('day');
+                const beforeMoment = before && before(moment(viikot[0].alku)).startOf('day');
+
+                return p => (!after || p.alku.isAfter(afterMoment)) && (!before || p.alku.isBefore(beforeMoment))
             } else {
                 return () => false;
             }
         }
-        return [
-            sivukoko('kk', viikot => viikot.filter(filter(viikot, m => m.subtract(1, 'month')))),
-            sivukoko('3kk', viikot => viikot.filter(filter(viikot, m => m.subtract(3, 'month')))),
-            sivukoko('6kk', viikot => viikot.filter(filter(viikot, m => m.subtract(6, 'month')))),
-            sivukoko('vuosi', viikot => viikot.filter(filter(viikot, m => m.subtract(1, 'year')))),
+        const sivukoot = [
+            sivukoko('kk', viikot => viikot.filter(between(viikot, m => m.subtract(1, 'month')))),
+            sivukoko('3kk', viikot => viikot.filter(between(viikot, m => m.subtract(3, 'month')))),
+            sivukoko('6kk', viikot => viikot.filter(between(viikot, m => m.subtract(6, 'month')))),
+            sivukoko('vuosi', viikot => viikot.filter(between(viikot, m => m.subtract(1, 'year')))),
             sivukoko('kaikki', viikot => viikot)
-        ]
-    })();
+        ];
+        sivukoot.splice(4, 0, ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year')
+            .map(aikavali => sivukoko(
+                aikavali.alku.format('YYYY'),
+                viikot => viikot.filter(between(viikot, () => aikavali.alku, () => aikavali.loppu)))))
+        return sivukoot;
+    };
 
     export default {
         name: 'Viikot',
@@ -128,13 +135,12 @@
             }
         },
         data() {
-            return {
-                global: Tuntikirjanpito.get(),
-                local: {
-                    sivukoko: sivukoot[1],
-                    sivukoot
-                }
-            }
+            const global = Tuntikirjanpito.get();
+            const local = {
+                sivukoot: sivukoot(global.merkinnat),
+            };
+            local.sivukoko = local.sivukoot[1];
+            return {global, local}
         }
     }
 
