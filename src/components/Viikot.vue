@@ -57,34 +57,21 @@
     import Tuntikirjanpito from '../data';
     import _ from 'lodash';
     import moment from 'moment';
-    import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {saldoAikojenAlussa} from '../data';
+    import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
+    import {beginningOfTime, endOfTime} from '../data';
 
     const sivukoot = merkinnat => {
-        function sivukoko(name, filterFn) {
-            return { name, filterFn }
-        }
-        function between(viikot, after, before) {
-            if (viikot && viikot.length > 0) {
-                const afterMoment = after && after(moment(viikot[0].alku)).startOf('day');
-                const beforeMoment = before && before(moment(viikot[0].alku)).startOf('day');
-
-                return p => (!after || p.alku.isAfter(afterMoment)) && (!before || p.alku.isBefore(beforeMoment))
-            } else {
-                return () => false;
-            }
+        function sivukoko(name, alku, loppu) {
+            return {name, alku, loppu}
         }
         const sivukoot = [
-            sivukoko('kk', viikot => viikot.filter(between(viikot, m => m.subtract(1, 'month')))),
-            sivukoko('3kk', viikot => viikot.filter(between(viikot, m => m.subtract(3, 'month')))),
-            sivukoko('6kk', viikot => viikot.filter(between(viikot, m => m.subtract(6, 'month')))),
-            sivukoko('vuosi', viikot => viikot.filter(between(viikot, m => m.subtract(1, 'year')))),
-            sivukoko('kaikki', viikot => viikot)
+            sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().endOf('day')),
+            sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().endOf('day')),
+            sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().endOf('day')),
+            sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day')),
+            sivukoko('kaikki', merkinnat[0].paiva, moment().endOf('day'))
         ];
-        sivukoot.splice(4, 0, ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year')
-            .map(aikavali => sivukoko(
-                aikavali.alku.format('YYYY'),
-                viikot => viikot.filter(between(viikot, () => aikavali.alku, () => aikavali.loppu)))))
+        sivukoot.splice(4, 0, ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year').map(aikavali => sivukoko(aikavali.alku.format('YYYY'), aikavali.alku, aikavali.loppu)));
         return sivukoot;
     };
 
@@ -92,11 +79,14 @@
         name: 'Viikot',
         computed: {
             computedViikot() {
+                const self = this;
                 const pyhat = this.global.pyhat.map(p => p.date);
-                const merkinnatRyhmiteltyna = _.groupBy(this.global.merkinnat, m => moment(m.paiva).startOf('week'));
-                return this.local.sivukoko.filterFn(_.chain(kaikkiAikavalitTapahtumienValilla(this.global.merkinnat))
+                const valitutṔaivat = _.filter(this.global.merkinnatPaivittain, p => p.paiva.isBetween(self.local.sivukoko.alku, self.local.sivukoko.loppu));
+                const merkinnatViikoittain = _.groupBy(_.values(valitutṔaivat), m => moment(m.paiva).startOf('week'));
+
+                return _.chain(kaikkiAikavalit(self.local.sivukoko.alku, self.local.sivukoko.loppu))
                     .map(viikko => {
-                        viikko.merkinnat = merkinnatRyhmiteltyna[viikko.alku] || [];
+                        viikko.merkinnat = merkinnatViikoittain[viikko.alku] || [];
                         return viikko;
                     })
                     .map(viikko => {
@@ -122,16 +112,16 @@
                             .filter(d => !pyhat.includes(d))
                             .value().length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
+                        viikko.saldo = viikko.merkinnat.length > 0 ? viikko.merkinnat[viikko.merkinnat.length - 1].saldo : undefined;
                         return viikko;
                     })
                     .sortBy('alku')
-                    .map((viikko, idx, all) => {
-                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos);
-                        viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos) - viikko.ylityo;
+                    /*.map((viikko, idx, all) => {
+                        //viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos) - viikko.ylityo;
                         return viikko;
-                    })
+                    })*/
                     .reverse()
-                    .value());
+                    .value();
             }
         },
         data() {
