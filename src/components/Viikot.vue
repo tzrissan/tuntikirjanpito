@@ -58,7 +58,6 @@
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
-    import {beginningOfTime, endOfTime} from '../data';
 
     const sivukoot = merkinnat => {
         function sivukoko(name, alku, loppu) {
@@ -71,7 +70,12 @@
             sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day')),
             sivukoko('kaikki', merkinnat[0].paiva, moment().endOf('day'))
         ];
-        sivukoot.splice(4, 0, ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year').map(aikavali => sivukoko(aikavali.alku.format('YYYY'), aikavali.alku, aikavali.loppu)));
+        sivukoot.splice(4, 0,
+            ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year')
+                .map(aikavali => sivukoko(
+                    aikavali.alku.format('YYYY'),
+                    aikavali.alku,
+                    moment().isBefore(aikavali.loppu)? moment() : aikavali.loppu)));
         return sivukoot;
     };
 
