@@ -109,7 +109,7 @@
                 <tr>
                     <td colspan="11" class="rajoitus">
                         <div class="clickable"
-                             v-for="sivukoko in local.sivukoot"
+                             v-for="sivukoko in sivukoot"
                              v-bind:key="sivukoko.name"
                              v-bind:class="{ active: local.sivukoko === sivukoko}"
                              v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
@@ -128,30 +128,17 @@
     import moment from 'moment';
     import Tuntikirjanpito from '../data.js';
     import UusiRivi from "./UusiRivi";
-    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla, nyt} from '../date-time-util';
+    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla, kaikkiAikavalit, nyt} from '../date-time-util';
 
-    const sivukoot = (() => {
-        function sivukoko(name, filterFn) {
-            return { name, filterFn }
-        }
-        function filter(paivat, f) {
-            if (paivat && paivat.length > 0) {
-                const limit = f(moment(paivat[0].date)).startOf('day');
-                return p => p.paiva.isAfter(limit);
-            } else {
-                return () => false;
-            }
-        }
-        return [
-            sivukoko('viikko', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'week')))),
-            sivukoko('kk', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'month')))),
-            sivukoko('3kk', paivat => paivat.filter(filter(paivat, m => m.subtract(3, 'month')))),
-            sivukoko('6kk', paivat => paivat.filter(filter(paivat, m => m.subtract(6, 'month')))),
-            sivukoko('vuosi', paivat => paivat.filter(filter(paivat, m => m.subtract(1, 'year')))),
-            sivukoko('kaikki', paivat => paivat)
-        ]
-    })();
-
+    function sivukoko(name, alku, loppu) {
+        return {name, alku, loppu}
+    }
+    const oletusSivukoot = [
+        sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day')),
+    ];
 
     export default {
         name: 'Paivat',
@@ -159,15 +146,9 @@
         props: {},
         computed: {
             computedPaivat() {
-
-                function laskevassaJarjestyksessa(paivat) {
-                    return _.sortBy(paivat, ['date', 'tuloaika']).reverse();
-                }
-
-                const kaikkiPaivat = kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'day');
-
-                return this.local.sivukoko.filterFn(laskevassaJarjestyksessa(
-                    kaikkiPaivat.map(paiva => {
+                const self = this;
+                return _.chain(kaikkiAikavalit(self.local.sivukoko.alku, self.local.sivukoko.loppu, 'day'))
+                    .map(paiva => {
                         const merkinnat = this.global.merkinnatPaivittain[paiva.alku.format('YYYY-MM-DD')];
                         return merkinnat ? merkinnat : {
                             date: paiva.alku.format('YYYY-MM-DD'),
@@ -175,7 +156,21 @@
                             merkinnat: []
                         }
                     })
-                ));
+                    .sortBy(['date', 'tuloaika'])
+                    .value()
+                    .reverse();
+            },
+            sivukoot () {
+                const firstDay = _.get(this.global, 'merkinnat[0].paiva', moment().startOf('day'));
+                const sivukoot = [ ...oletusSivukoot ];
+                sivukoot.splice(4, 0, sivukoko('kaikki', firstDay, moment().endOf('day')))
+                sivukoot.splice(4, 0,
+                    ...kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'year')
+                        .map(aikavali => sivukoko(
+                            aikavali.alku.format('YYYY'),
+                            aikavali.alku,
+                            moment().isBefore(aikavali.loppu) ? moment() : aikavali.loppu)));
+                return sivukoot;
             }
         },
         methods: {
@@ -242,15 +237,12 @@
         },
         data() {
             const global = Tuntikirjanpito.get();
-            return {
-                global,
-                local: {
-                    editId: undefined,
-                    uusi: false,
-                    sivukoko: sivukoot[1],
-                    sivukoot
-                }
-            }
+            const local = {
+                editId: undefined,
+                uusi: false
+            };
+            local.sivukoko = oletusSivukoot[0]
+            return {global, local}
         }
     }
 </script>

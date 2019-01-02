@@ -85,8 +85,8 @@
             computedViikot() {
                 const self = this;
                 const pyhat = this.global.pyhat.map(p => p.date);
-                const valitutṔaivat = _.filter(this.global.merkinnatPaivittain, p => p.paiva.isBetween(self.local.sivukoko.alku, self.local.sivukoko.loppu));
-                const merkinnatViikoittain = _.groupBy(_.values(valitutṔaivat), m => moment(m.paiva).startOf('week'));
+                const valitutṔaivat = _.filter(_.values(this.global.merkinnatPaivittain), p => p.paiva.isBetween(self.local.sivukoko.alku, self.local.sivukoko.loppu));
+                const merkinnatViikoittain = _.groupBy(valitutṔaivat, m => moment(m.paiva).startOf('week'));
 
                 return _.chain(kaikkiAikavalit(self.local.sivukoko.alku, self.local.sivukoko.loppu))
                     .map(viikko => {
