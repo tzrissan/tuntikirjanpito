@@ -14,7 +14,7 @@
 <script>
 
     import Tuntikirjanpito from '../data.js';
-    import BarChart from './BarChart';
+    import BarChart from '../components/BarChart';
     import _ from 'lodash';
     import moment from 'moment';
     import {kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
