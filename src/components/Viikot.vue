@@ -64,10 +64,10 @@
             return {name, alku, loppu}
         }
         const sivukoot = [
-            sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().endOf('day')),
-            sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().endOf('day')),
-            sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().endOf('day')),
-            sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day')),
+            sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
+            sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
+            sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
+            sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().add(1, 'day').startOf('day')),
             sivukoko('kaikki', merkinnat[0].paiva, moment().endOf('day'))
         ];
         sivukoot.splice(4, 0,
@@ -120,10 +120,6 @@
                         return viikko;
                     })
                     .sortBy('alku')
-                    /*.map((viikko, idx, all) => {
-                        //viikko.saldo = (idx ? all[idx - 1].saldo : saldoAikojenAlussa) + (_.isNaN(viikko.saldomuutos) ? 0 : viikko.saldomuutos) - viikko.ylityo;
-                        return viikko;
-                    })*/
                     .reverse()
                     .value();
             }

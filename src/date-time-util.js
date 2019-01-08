@@ -71,7 +71,7 @@ export function minuutitKellonaikana(minuuttia = 0) {
 
 export function kaikkiAikavalit(alku, loppu, step = 'week') {
     const aikavalit = [];
-    for (let i = moment(alku); i.isBefore(loppu); i = i.add(1, step)) {
+    for (let i = moment(alku).startOf(step); !i.isAfter(loppu); i = i.add(1, step)) {
         aikavalit.push({
             alku : moment(i).startOf(step),
             loppu : moment(i).endOf(step),
