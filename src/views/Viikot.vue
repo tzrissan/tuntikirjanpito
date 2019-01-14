@@ -2,16 +2,18 @@
     <div>
         <table>
             <thead>
+            <tr>
                 <th>vko</th>
                 <th></th>
                 <th>Ma</th><th>Ti</th><th>Ke</th><th>To</th><th>Pe</th><th>La</th><th>Su</th>
                 <th class="kirjausYhteensa">Kirjaus</th>
                 <th class="saldo">&Delta;</th>
                 <th class="saldo">Saldo</th>
+            </tr>
             </thead>
             <tbody>
-            <tr v-for="v in computedViikot" v-bind:key="v.nimi"
-                v-bind:class="{
+            <tr v-for="v in computedViikot" :key="v.nimi"
+                :class="{
                     'vuoden-vaihto-viikolla': v.vuodenVaihtoViikolla,
                     'vuoden-vaihto-su-ma': v.vuodenVaihtoSuMa,
                     'kuukauden-vaihto-viikolla': v.kuukaudenVaihtoViikolla,
@@ -24,27 +26,24 @@
                     <template v-if="v.vuodenVaihtoViikolla">{{ v.alku | moment("D.M.YYYY") }} - {{ v.loppu | moment("D.M.YYYY")}}</template>
                 </td>
                 <td class="kirjaus"
-                    v-for="paiva in v.paivat" v-bind:key="paiva.viikonpaiva"
-                    v-bind:class="{ 'kuukauden-alku': paiva.kuukaudenAlku }">
-                    <span v-if="paiva.kirjaus !== 0">{{ paiva.kirjaus | numeral('0.0') }}</span>
-                    <span v-else>-</span>
+                    v-for="paiva in v.paivat" :key="paiva.viikonpaiva"
+                    :class="{ 'kuukauden-alku': paiva.kuukaudenAlku }">
+                    <span v-if="paiva.kirjaus">{{ paiva.kirjaus | numeral('0.0') }}</span>
                 </td>
                 <td class="kirjausYhteensa">
                     <span v-if="v.kirjausYhteensa !== 0">{{ v.kirjausYhteensa | numeral('0.0') }}</span>
-                    <span v-else>-</span>
                 <td class="saldo">
                     <span class="saldomuutos" v-if="v.saldomuutos !== 0">{{ v.saldomuutos | numeral('+0.0') }}</span>
-                    <span v-else>-</span>
                 </td>
                 <td class="saldo">{{ v.saldo | numeral('0.0') }}</td>
             </tr>
             <tr>
                 <td colspan="12" class="rajoitus">
                     <div class="clickable"
-                         v-for="sivukoko in local.sivukoot"
-                         v-bind:key="sivukoko.name"
-                         v-bind:class="{ active: local.sivukoko === sivukoko}"
-                         v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
+                         v-for="s in sivukoot"
+                         :key="s.name"
+                         :class="{ active: local.sivukoko === s}"
+                         v-on:click="local.sivukoko = s">{{ s.name }}</div>
                 </td>
             </tr>
             </tbody>
@@ -59,77 +58,81 @@
     import moment from 'moment';
     import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '../date-time-util';
 
-    const sivukoot = merkinnat => {
-        function sivukoko(name, alku, loppu) {
-            return {name, alku, loppu}
-        }
-        const sivukoot = [
-            sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
-            sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
-            sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().add(1, 'day').startOf('day')),
-            sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().add(1, 'day').startOf('day')),
-            sivukoko('kaikki', merkinnat[0].paiva, moment().endOf('day'))
-        ];
-        sivukoot.splice(4, 0,
-            ...kaikkiAikavalitTapahtumienValilla(merkinnat, 'year')
-                .map(aikavali => sivukoko(
-                    aikavali.alku.format('YYYY'),
-                    aikavali.alku,
-                    moment().isBefore(aikavali.loppu)? moment() : aikavali.loppu)));
-        return sivukoot;
-    };
-
+    function sivukoko(name, alku, loppu) {
+        return {name, alku, loppu}
+    }
+    const oletusSivukoot = [
+        sivukoko('kk', moment().locale('fi').subtract(1, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('3kk', moment().locale('fi').subtract(3, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('6kk', moment().locale('fi').subtract(6, 'month').startOf('day'), moment().endOf('day')),
+        sivukoko('vuosi', moment().locale('fi').subtract(1, 'year').startOf('day'), moment().endOf('day'))
+    ];
     export default {
         name: 'Viikot',
         computed: {
             computedViikot() {
                 const self = this;
                 const pyhat = this.global.pyhat.map(p => p.date);
-                const valitutṔaivat = _.filter(_.values(this.global.merkinnatPaivittain), p => p.paiva.isBetween(self.local.sivukoko.alku, self.local.sivukoko.loppu));
-                const merkinnatViikoittain = _.groupBy(valitutṔaivat, m => moment(m.paiva).startOf('week'));
 
                 return _.chain(kaikkiAikavalit(self.local.sivukoko.alku, self.local.sivukoko.loppu))
                     .map(viikko => {
-                        viikko.merkinnat = merkinnatViikoittain[viikko.alku] || [];
-                        return viikko;
-                    })
-                    .map(viikko => {
+                        viikko.kuukaudenVaihtoViikolla = viikko.alku.month() !== viikko.loppu.month();
+                        viikko.vuodenVaihtoViikolla = viikko.alku.year() !== viikko.loppu.year();
+                        viikko.vuodenVaihtoSuMa = viikko.alku.date() === 1 && viikko.alku.month() === 0;
+                        viikko.kuukaudenVaihtoSuMa = viikko.alku.date() === 1;
+
                         viikko.paivat = Array.from({length: 7}, (val, idx) => idx).map(
                             n => {
+                                const paiva = moment(viikko.alku).add(n, 'day');
+                                const merkinnat = paiva.isBetween(self.local.sivukoko.alku, self.local.sivukoko.loppu) ?
+                                    self.global.merkinnatPaivittain[paiva.format('YYYY-MM-DD')] :
+                                    undefined;
+                                //console.log(viikko.alku.weekday() + ' ' + viikko.alku.format('YYYY-MM-DD dddd'))
                                 return {
+                                    paiva,
+                                    merkinnat,
                                     viikonpaiva: n,
-                                    kuukaudenAlku: viikko.alku.month() !== viikko.loppu.month() && moment(viikko.alku).add(n, 'day').date() === 1,
-                                    kirjaus: viikko.merkinnat.filter(m => m.paiva.weekday() === n).reduce((a, m) => a + m.kirjaus, 0)
+                                    kuukaudenAlku: viikko.kuukaudenVaihtoViikolla && paiva.date() === 1,
+                                    kirjaus: merkinnat ? merkinnat.kirjaus : undefined,
+                                    saldo: merkinnat ? merkinnat.saldo : undefined
                                 }
                             }
                         );
-                        viikko.vuodenVaihtoViikolla = viikko.alku.year() !== viikko.loppu.year();
-                        viikko.kuukaudenVaihtoViikolla = viikko.alku.month() !== viikko.loppu.month();
-                        viikko.vuodenVaihtoSuMa = viikko.alku.date()===1 && viikko.alku.month()===0;
-                        viikko.kuukaudenVaihtoSuMa = viikko.alku.date()===1;
-                        viikko.kirjausYhteensa = viikko.merkinnat.reduce((a, m) => a + m.kirjaus, 0);
-                        viikko.ylityo = viikko.merkinnat.reduce((a, m) => a + (m.ylityo ? m.ylityo : 0), 0);
-                        viikko.tyopaivia = _.chain(viikko.merkinnat)
-                            .filter(m => m.paiva.weekday() < 5)
-                            .map(m => m.date)
-                            .uniq()
+
+                        viikko.kirjausYhteensa = viikko.paivat.map(p => _.get(p, 'merkinnat.kirjaus', 0)).reduce((a, i) => a + i, 0);
+                        viikko.ylityo = viikko.paivat.map(p => _.get(p, 'merkinnat.ylityo', 0)).reduce((a, i) => a + i, 0);
+                        viikko.tyopaivia = viikko.paivat
+                            .filter(p => p.merkinnat)
+                            .map(p => p.paiva)
+                            .filter(p => p.weekday() < 5)
                             .filter(d => !pyhat.includes(d))
-                            .value().length;
+                            .length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
-                        viikko.saldo = viikko.merkinnat.length > 0 ? viikko.merkinnat[viikko.merkinnat.length - 1].saldo : undefined;
+                        viikko.saldo = viikko.paivat.map(p => p.saldo).filter(s => s).find(() => true)
                         return viikko;
                     })
                     .sortBy('alku')
                     .reverse()
                     .value();
+            },
+            sivukoot () {
+                const firstDay = _.get(this.global, 'merkinnat[0].paiva', moment().startOf('day'));
+                const sivukoot = [ ...oletusSivukoot ];
+                sivukoot.splice(4, 0, sivukoko('kaikki', firstDay, moment().endOf('day')));
+                sivukoot.splice(4, 0,
+                    ...kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'year')
+                        .map(aikavali => sivukoko(
+                            aikavali.alku.format('YYYY'),
+                            aikavali.alku,
+                            moment().isBefore(aikavali.loppu) ? moment() : aikavali.loppu)));
+                return sivukoot;
             }
         },
         data() {
             const global = Tuntikirjanpito.get();
             const local = {
-                sivukoot: sivukoot(global.merkinnat),
+                sivukoko: oletusSivukoot[1]
             };
-            local.sivukoko = local.sivukoot[1];
             return {global, local}
         }
     }

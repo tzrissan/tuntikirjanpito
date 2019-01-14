@@ -6,6 +6,7 @@ import router from './router'
 
 const moment = require('moment');
 require('moment/locale/fi');
+moment.locale('fi');
 
 Vue.filter('aikavali2UiStr', function (aikavaliMinuutteina, naytaPlusMerkki = false) {
     if (_.isNumber(aikavaliMinuutteina) && !_.isNaN(aikavaliMinuutteina)) {

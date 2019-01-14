@@ -137,7 +137,7 @@
         sivukoko('kk', moment().subtract(1, 'month').startOf('day'), moment().endOf('day')),
         sivukoko('3kk', moment().subtract(3, 'month').startOf('day'), moment().endOf('day')),
         sivukoko('6kk', moment().subtract(6, 'month').startOf('day'), moment().endOf('day')),
-        sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day')),
+        sivukoko('vuosi', moment().subtract(1, 'year').startOf('day'), moment().endOf('day'))
     ];
 
     export default {
@@ -163,7 +163,7 @@
             sivukoot () {
                 const firstDay = _.get(this.global, 'merkinnat[0].paiva', moment().startOf('day'));
                 const sivukoot = [ ...oletusSivukoot ];
-                sivukoot.splice(4, 0, sivukoko('kaikki', firstDay, moment().endOf('day')))
+                sivukoot.splice(4, 0, sivukoko('kaikki', firstDay, moment().endOf('day')));
                 sivukoot.splice(4, 0,
                     ...kaikkiAikavalitTapahtumienValilla(this.global.merkinnat, 'year')
                         .map(aikavali => sivukoko(
@@ -239,9 +239,9 @@
             const global = Tuntikirjanpito.get();
             const local = {
                 editId: undefined,
-                uusi: false
+                uusi: false,
+                sivukoko: oletusSivukoot[0]
             };
-            local.sivukoko = oletusSivukoot[0]
             return {global, local}
         }
     }
