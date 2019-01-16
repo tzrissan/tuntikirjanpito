@@ -235,7 +235,7 @@
                     tot: this.computedViikot
                         .map(v => v.paivat)
                         .map(p => p.map(x=>x.kirjaus).reduce(max, undefined))
-                        .reduce(min, undefined),
+                        .reduce(max, undefined),
                     kirjausYhteensa: this.computedViikot.map(v => v.kirjausYhteensa).reduce(max, undefined)
                 }
             },
