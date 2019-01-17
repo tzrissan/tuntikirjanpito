@@ -135,7 +135,7 @@
 
     import Tuntikirjanpito from '@/data';
     import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '@/date-time-util';
-    import {min, max, avg, median, sum, exists} from '@/util'
+    import {min, max, avg, median, sum, exists, last} from '@/util'
 
     function sivukoko(name, alku, loppu) {
         return {name, alku, loppu}
@@ -187,7 +187,7 @@
                             .filter(d => !pyhat.includes(d))
                             .length;
                         viikko.saldomuutos = viikko.kirjausYhteensa - (viikko.tyopaivia * 7.5);
-                        viikko.saldo = viikko.paivat.map(p => p.saldo).filter(s => s).find(() => true)
+                        viikko.saldo = viikko.paivat.map(p => p.saldo).filter(exists).find(last)
                         return viikko;
                     })
                     .sortBy('alku')

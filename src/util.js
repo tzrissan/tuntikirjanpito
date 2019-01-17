@@ -1,4 +1,3 @@
-
 export const min = (a, i) => !i || a < i ? a : i;
 export const max = (a, i) => !i || a > i ? a : i;
 export const exists = x => !!x;
@@ -17,3 +16,4 @@ export const median = (l = []) => {
         }
     }
 };
+export const last = (e, idx, array) => idx === (array.length - 1);
