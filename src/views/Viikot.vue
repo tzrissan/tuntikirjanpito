@@ -68,7 +68,8 @@
                          v-for="s in sivukoot"
                          :key="s.name"
                          :class="{ active: local.sivukoko === s}"
-                         v-on:click="local.sivukoko = s">{{ s.name }}</div>
+                         v-on:click="local.sivukoko = s">{{ s.name }}
+                    </div>
                 </td>
             </tr>
             </tbody>
