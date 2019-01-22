@@ -31,6 +31,19 @@
                 </thead>
                 <tbody>
                 <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
+                </tbody>
+                <tbody>
+                <tr>
+                    <td colspan="11" class="rajoitus">
+                        <div class="clickable"
+                             v-for="sivukoko in sivukoot"
+                             v-bind:key="sivukoko.name"
+                             v-bind:class="{ active: local.sivukoko === sivukoko}"
+                             v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
+                    </td>
+                </tr>
+                </tbody>
+                <tbody>
                 <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date"
                     v-bind:class="{ 'vuoden-eka-paiva': paiva.paiva.dayOfYear() === 1, 'kuukauden-eka-paiva': paiva.paiva.date() === 1}">
                     <td class="toiminnot">
@@ -106,6 +119,8 @@
 
                     </td>
                 </tr>
+                </tbody>
+                <tbody v-if="computedPaivat.length > 35">
                 <tr>
                     <td colspan="11" class="rajoitus">
                         <div class="clickable"
@@ -435,6 +450,10 @@
 
     .vuoden-eka-paiva {
         border-bottom: 3px double black;
+    }
+
+    tbody {
+        border-bottom: 1px solid black;
     }
 
 </style>
