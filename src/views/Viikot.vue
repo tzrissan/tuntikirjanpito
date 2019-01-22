@@ -18,64 +18,12 @@
             </tr>
             </thead>
             <tbody>
-            <tr class="stat stat-min">
-                <td class="title">Min</td>
-                <td>{{ minValues.tot | numeral('0.0') }}</td>
-                <td>{{ minValues.ma | numeral('0.0') }}</td>
-                <td>{{ minValues.ti | numeral('0.0') }}</td>
-                <td>{{ minValues.ke | numeral('0.0') }}</td>
-                <td>{{ minValues.to | numeral('0.0') }}</td>
-                <td>{{ minValues.pe | numeral('0.0') }}</td>
-                <td>{{ minValues.la | numeral('0.0') }}</td>
-                <td>{{ minValues.su | numeral('0.0') }}</td>
-                <td>{{ minValues.kirjausYhteensa | numeral('0.0') }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr class="stat stat-max">
-                <td class="title">Max</td>
-                <td>{{ maxValues.tot | numeral('0.0') }}</td>
-                <td>{{ maxValues.ma | numeral('0.0') }}</td>
-                <td>{{ maxValues.ti | numeral('0.0') }}</td>
-                <td>{{ maxValues.ke | numeral('0.0') }}</td>
-                <td>{{ maxValues.to | numeral('0.0') }}</td>
-                <td>{{ maxValues.pe | numeral('0.0') }}</td>
-                <td>{{ maxValues.la | numeral('0.0') }}</td>
-                <td>{{ maxValues.su | numeral('0.0') }}</td>
-                <td>{{ maxValues.kirjausYhteensa | numeral('0.0') }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr class="stat stat-avg">
-                <td class="title">Avg</td>
-                <td>{{ avgValues.tot | numeral('0.00') }}</td>
-                <td>{{ avgValues.ma | numeral('0.00') }}</td>
-                <td>{{ avgValues.ti | numeral('0.00') }}</td>
-                <td>{{ avgValues.ke | numeral('0.00') }}</td>
-                <td>{{ avgValues.to | numeral('0.00') }}</td>
-                <td>{{ avgValues.pe | numeral('0.00') }}</td>
-                <td>{{ avgValues.la | numeral('0.00') }}</td>
-                <td>{{ avgValues.su | numeral('0.00') }}</td>
-                <td>{{ avgValues.kirjausYhteensa | numeral('0.00') }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr class="stat stat-avg">
-                <td class="title">Median</td>
-                <td>{{ medianValues.tot | numeral('0.00') }}</td>
-                <td>{{ medianValues.ma | numeral('0.00') }}</td>
-                <td>{{ medianValues.ti | numeral('0.00') }}</td>
-                <td>{{ medianValues.ke | numeral('0.00') }}</td>
-                <td>{{ medianValues.to | numeral('0.00') }}</td>
-                <td>{{ medianValues.pe | numeral('0.00') }}</td>
-                <td>{{ medianValues.la | numeral('0.00') }}</td>
-                <td>{{ medianValues.su | numeral('0.00') }}</td>
-                <td>{{ medianValues.kirjausYhteensa | numeral('0.00') }}</td>
-                <td></td>
-                <td></td>
-            </tr>
+            <ViikkoTilastoRivi title="Min" :values="minValues" numberFormat="'0.0'"/>
+            <ViikkoTilastoRivi title="Max" :values="maxValues" numberFormat="'0.0'"/>
+            <ViikkoTilastoRivi title="Avg" :values="avgValues" numberFormat="'0.00'"/>
+            <ViikkoTilastoRivi title="Median" :values="medianValues" numberFormat="'0.00'"/>
             </tbody>
-            <tbody v-if="computedViikot.length > 35">
+            <tbody>
             <tr>
                 <td colspan="12" class="rajoitus">
                     <div class="clickable"
@@ -113,7 +61,7 @@
                 <td class="saldo">{{ v.saldo | numeral('0.0') }}</td>
             </tr>
             </tbody>
-            <tbody>
+            <tbody v-if="computedViikot.length > 35">
             <tr>
                 <td colspan="12" class="rajoitus">
                     <div class="clickable"
@@ -134,8 +82,10 @@
     import moment from 'moment';
 
     import Tuntikirjanpito from '@/data';
-    import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '@/date-time-util';
+    import {kaikkiAikavalit, kaikkiAikavalitTapahtumienValilla} from '@/date-time-util'
     import {min, max, avg, median, sum, exists, last} from '@/util'
+
+    import ViikkoTilastoRivi from '@/components/ViikkoTilastoRivi'
 
     function sivukoko(name, alku, loppu) {
         return {name, alku, loppu}
@@ -149,6 +99,7 @@
     ];
     export default {
         name: 'Viikot',
+        components: {ViikkoTilastoRivi},
         computed: {
             computedViikot() {
                 const self = this;
@@ -219,8 +170,9 @@
                         .map(v => v.paivat)
                         .map(p => p.map(x=>x.kirjaus).reduce(min, undefined))
                         .reduce(min, undefined),
-                    kirjausYhteensa: this.computedViikot.map(v => v.kirjausYhteensa).reduce(min, undefined)
-
+                    kirjausYhteensa: this.computedViikot.map(v => v.kirjausYhteensa).reduce(min, undefined),
+                    saldomuutos: this.computedViikot.map(v => v.saldomuutos).reduce(min, undefined),
+                    saldo: this.computedViikot.map(v => v.saldo).reduce(min, undefined)
                 }
             },
             maxValues() {
@@ -236,7 +188,9 @@
                         .map(v => v.paivat)
                         .map(p => p.map(x=>x.kirjaus).reduce(max, undefined))
                         .reduce(max, undefined),
-                    kirjausYhteensa: this.computedViikot.map(v => v.kirjausYhteensa).reduce(max, undefined)
+                    kirjausYhteensa: this.computedViikot.map(v => v.kirjausYhteensa).reduce(max, undefined),
+                    saldomuutos: this.computedViikot.map(v => v.saldomuutos).reduce(max, undefined),
+                    saldo: this.computedViikot.map(v => v.saldo).reduce(max, undefined)
                 }
             },
             avgValues() {
@@ -249,7 +203,9 @@
                     la: avg(this.computedViikot.map(v => v.paivat[5].kirjaus).filter(exists)),
                     su: avg(this.computedViikot.map(v => v.paivat[6].kirjaus).filter(exists)),
                     tot: avg(_.flatten(this.computedViikot.map(v => v.paivat)).map(x=>x.kirjaus).filter(exists)),
-                    kirjausYhteensa: avg(this.computedViikot.map(v => v.kirjausYhteensa).filter(exists))
+                    kirjausYhteensa: avg(this.computedViikot.map(v => v.kirjausYhteensa).filter(exists)),
+                    saldomuutos: avg(this.computedViikot.map(v => v.saldomuutos).filter(exists)),
+                    saldo: avg(this.computedViikot.map(v => v.saldo).filter(exists))
                 }
             },
             medianValues() {
@@ -262,7 +218,9 @@
                     la: median(this.computedViikot.map(v => v.paivat[5].kirjaus).filter(exists)),
                     su: median(this.computedViikot.map(v => v.paivat[6].kirjaus).filter(exists)),
                     tot: median(_.flatten(this.computedViikot.map(v => v.paivat)).map(x=>x.kirjaus).filter(exists)),
-                    kirjausYhteensa: median(this.computedViikot.map(v => v.kirjausYhteensa).filter(exists))
+                    kirjausYhteensa: median(this.computedViikot.map(v => v.kirjausYhteensa).filter(exists)),
+                    saldomuutos: median(this.computedViikot.map(v => v.saldomuutos).filter(exists)),
+                    saldo: median(this.computedViikot.map(v => v.saldo).filter(exists))
                 }
             }
 
@@ -385,11 +343,6 @@
 
     tbody {
         border-bottom: 1px solid black;
-    }
-
-    .stat {
-        color: grey;
-        font-size: small;
     }
 
 

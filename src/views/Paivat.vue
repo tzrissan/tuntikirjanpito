@@ -143,7 +143,6 @@
     export default {
         name: 'Paivat',
         components: {UusiRivi},
-        props: {},
         computed: {
             computedPaivat() {
                 const self = this;
