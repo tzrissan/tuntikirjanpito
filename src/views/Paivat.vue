@@ -19,7 +19,7 @@
                 <tr>
                     <th class="toiminnot uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</th>
                     <th colspan="2">Pvm</th>
-                    <th>Tuloaika - <br> Lähtöaika</th>
+                    <th colspan="2">Tuloaika - <br> Lähtöaika</th>
                     <th><small>Lounas</small></th>
                     <th>Työaika</th>
                     <th>Kirjaus</th>
@@ -30,11 +30,17 @@
                 </tr>
                 </thead>
                 <tbody>
-                <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
+                    <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
+                </tbody>
+                <tbody>
+                    <PaivaTilastoRivi title="Min" :values="minValues"/>
+                    <PaivaTilastoRivi title="Max" :values="maxValues"/>
+                    <PaivaTilastoRivi title="Avg" :values="avgValues"/>
+                    <PaivaTilastoRivi title="Median" :values="medianValues"/>
                 </tbody>
                 <tbody>
                 <tr>
-                    <td colspan="11" class="rajoitus">
+                    <td colspan="12" class="rajoitus">
                         <div class="clickable"
                              v-for="sivukoko in sivukoot"
                              v-bind:key="sivukoko.name"
@@ -60,7 +66,7 @@
                     <td  class="pvm">
                         {{ paiva.date | moment("D.M.YYYY") }}
                     </td>
-                    <td  class="tuloJaLahtoajat">
+                    <td colspan="2" class="tuloJaLahtoajat">
                         <div v-for="merkinta in paiva.merkinnat" v-bind:key="merkinta.id">
                             <template v-if="isEditing(paiva)">
                                 <input type="text" class="tuloaika" minlength="3" maxlength="5" v-model="merkinta.tuloaika"/>
@@ -138,12 +144,16 @@
 
 <script>
 
-    import _ from 'lodash';
-    import axios from 'axios';
-    import moment from 'moment';
-    import Tuntikirjanpito from '../data.js';
-    import UusiRivi from "./UusiRivi";
-    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla, kaikkiAikavalit, nyt} from '../date-time-util';
+    import _ from 'lodash'
+    import axios from 'axios'
+    import moment from 'moment'
+
+    import Tuntikirjanpito from '@/data.js'
+    import {aikavaliMinuutteina, formatTimeFromString, kaikkiAikavalitTapahtumienValilla, kaikkiAikavalit, nyt, aikavali2UiStr} from '@/date-time-util'
+    import {min, max, avg, median, exists} from '@/util'
+
+    import UusiRivi from '@/components/UusiRivi'
+    import PaivaTilastoRivi from '@/components/PaivaTilastoRivi'
 
     function sivukoko(name, alku, loppu) {
         return {name, alku, loppu}
@@ -157,7 +167,7 @@
 
     export default {
         name: 'Paivat',
-        components: {UusiRivi},
+        components: {UusiRivi, PaivaTilastoRivi},
         computed: {
             computedPaivat() {
                 const self = this;
@@ -185,6 +195,78 @@
                             aikavali.alku,
                             moment().isBefore(aikavali.loppu) ? moment() : aikavali.loppu)));
                 return sivukoot;
+            },
+            minValues () {
+                const paivat = this.computedPaivat.map(p => {
+                    return {
+                        tuloaika: p.merkinnat.map(m => m.tuloaika).reduce(min, undefined),
+                        lahtoaika: p.merkinnat.map(m => m.lahtoaika).reduce(max, undefined)
+                    }
+                });
+                return {
+                    tuloaika: paivat.map(p => p.tuloaika).filter(exists).reduce(min, undefined),
+                    lahtoaika: paivat.map(p => p.lahtoaika).filter(exists).reduce(min, undefined),
+                    lounaita: this.computedPaivat.map(p => p.lounaita).filter(exists).reduce(min, undefined),
+                    tyoaika: this.computedPaivat.map(p => p.tyoaika).filter(exists).reduce(min, undefined),
+                    kirjaus: this.computedPaivat.map(p => p.kirjaus).filter(exists).reduce(min, undefined),
+                    kirjausvirheenmuutos: this.computedPaivat.map(p => p.kirjausvirheenmuutos).filter(exists).reduce(min, undefined),
+                    saldo: this.computedPaivat.map(p => p.saldo).filter(exists).reduce(min, undefined),
+                    saldomuutos: (this.computedPaivat.map(p => p.saldomuutos).filter(exists)).reduce(min, 0),
+                }
+            },
+            maxValues () {
+                const paivat = this.computedPaivat.map(p => {
+                    return {
+                        tuloaika: p.merkinnat.map(m => m.tuloaika).reduce(min, undefined),
+                        lahtoaika: p.merkinnat.map(m => m.lahtoaika).reduce(max, undefined)
+                    }
+                });
+                return {
+                    tuloaika: paivat.map(p => p.tuloaika).filter(exists).reduce(max, undefined),
+                    lahtoaika: paivat.map(p => p.lahtoaika).filter(exists).reduce(max, undefined),
+                    lounaita: this.computedPaivat.map(p => p.lounaita).filter(exists).reduce(max, undefined),
+                    tyoaika: this.computedPaivat.map(p => p.tyoaika).filter(exists).reduce(max, undefined),
+                    kirjaus: this.computedPaivat.map(p => p.kirjaus).filter(exists).reduce(max, undefined),
+                    kirjausvirheenmuutos: this.computedPaivat.map(p => p.kirjausvirheenmuutos).filter(exists).reduce(max, undefined),
+                    saldo: this.computedPaivat.map(p => p.saldo).filter(exists).reduce(max, undefined),
+                    saldomuutos: (this.computedPaivat.map(p => p.saldomuutos).filter(exists)).reduce(max, 0),
+                }
+            },
+            avgValues () {
+                const paivat = this.computedPaivat.map(p => {
+                    return {
+                        tuloaika: p.merkinnat.map(m => m.tuloaika).reduce(min, undefined),
+                        lahtoaika: p.merkinnat.map(m => m.lahtoaika).reduce(max, undefined)
+                    }
+                });
+                return {
+                    tuloaika: aikavali2UiStr(avg(paivat.map(p => p.tuloaika).filter(exists).map(a => aikavaliMinuutteina('00.00', a)).filter(exists))),
+                    lahtoaika: aikavali2UiStr(avg(paivat.map(p => p.lahtoaika).filter(exists).map(a => aikavaliMinuutteina('00.00', a)).filter(exists))),
+                    lounaita: avg(this.computedPaivat.map(p => p.lounaita).filter(exists)),
+                    tyoaika: avg(this.computedPaivat.map(p => p.tyoaika).filter(exists)),
+                    kirjaus: avg(this.computedPaivat.map(p => p.kirjaus).filter(exists)),
+                    kirjausvirheenmuutos: avg(this.computedPaivat.map(p => p.kirjausvirheenmuutos).filter(exists)),
+                    saldo: avg(this.computedPaivat.map(p => p.saldo).filter(exists)),
+                    saldomuutos: avg(this.computedPaivat.map(p => p.saldomuutos).filter(exists)),
+                }
+            },
+            medianValues () {
+                const paivat = this.computedPaivat.map(p => {
+                    return {
+                        tuloaika: p.merkinnat.map(m => m.tuloaika).reduce(min, undefined),
+                        lahtoaika: p.merkinnat.map(m => m.lahtoaika).reduce(max, undefined)
+                    }
+                });
+                return {
+                    tuloaika: aikavali2UiStr(median(paivat.map(p => p.tuloaika).filter(exists).map(a => aikavaliMinuutteina('00.00', a)).filter(exists))),
+                    lahtoaika: aikavali2UiStr(median(paivat.map(p => p.lahtoaika).filter(exists).map(a => aikavaliMinuutteina('00.00', a)).filter(exists))),
+                    lounaita: median(this.computedPaivat.map(p => p.lounaita).filter(exists)),
+                    tyoaika: median(this.computedPaivat.map(p => p.tyoaika).filter(exists)),
+                    kirjaus: median(this.computedPaivat.map(p => p.kirjaus).filter(exists)),
+                    kirjausvirheenmuutos: median(this.computedPaivat.map(p => p.kirjausvirheenmuutos).filter(exists)),
+                    saldo: median(this.computedPaivat.map(p => p.saldo).filter(exists)),
+                    saldomuutos: median(this.computedPaivat.map(p => p.saldomuutos).filter(exists)),
+                }
             }
         },
         methods: {

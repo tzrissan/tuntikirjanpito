@@ -21,7 +21,7 @@ export function nyt() {
 }
 
 export function formatTimeFromString(time) {
-    if (!time || time.length ===0) {
+    if (!time || time.length === 0) {
         return undefined;
     } else {
         const hour = numeral(time.replace(TIME_REGEX, '$1')).format('00');
@@ -63,6 +63,20 @@ export function aikavaliMinuutteina(alku, loppu, lounaita = 0, oletusarvo = unde
     return (loppuH - alkuH) * 60 + (loppuM - alkuM) - (lounaita * 30);
 }
 
+export function aikavali2UiStr(aikavaliMinuutteina, naytaPlusMerkki = false) {
+    if (_.isNumber(aikavaliMinuutteina) && !_.isNaN(aikavaliMinuutteina)) {
+        const sign = aikavaliMinuutteina < 0 ? '-' : (aikavaliMinuutteina > 0 && naytaPlusMerkki ? '+' : '');
+        const minuutteja = Math.abs(aikavaliMinuutteina);
+        const d = numeral(Math.trunc(minuutteja / (24 * 60))).format('0');
+        const h = numeral(Math.trunc(minuutteja / 60) - (d * 24)).format('00');
+        const m = numeral(Math.trunc(minuutteja % 60)).format('00');
+        const fullText = `${sign}${d}:${h}:${m}`;
+        return fullText.replace(/^([+-]?)0:0?([1-9]?[0-9]:)/, '$1$2').replace(/^0:00$/, '-');
+    } else {
+        return aikavaliMinuutteina;
+    }
+}
+
 export function minuutitKellonaikana(minuuttia = 0) {
     const h = Math.trunc(minuuttia / 60);
     const m = Math.trunc(minuuttia % 60);
@@ -73,8 +87,8 @@ export function kaikkiAikavalit(alku, loppu, step = 'week') {
     const aikavalit = [];
     for (let i = moment(alku).startOf(step); !i.isAfter(loppu); i = i.add(1, step)) {
         aikavalit.push({
-            alku : moment(i).startOf(step),
-            loppu : moment(i).endOf(step),
+            alku: moment(i).startOf(step),
+            loppu: moment(i).endOf(step),
         });
     }
     return aikavalit;

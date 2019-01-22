@@ -1,6 +1,8 @@
-export const min = (a, i) => !i || a < i ? a : i;
-export const max = (a, i) => !i || a > i ? a : i;
-export const exists = x => !!x;
+import _ from 'lodash'
+
+export const min = (a, i) => _.isUndefined(i) || a < i ? a : i;
+export const max = (a, i) => _.isUndefined(i) || a > i ? a : i;
+export const exists = x => !_.isUndefined(x);
 export const sum = (a, i) => a + i;
 export const avg = (l = []) => l.length > 0 ? l.reduce(sum, 0) / l.length : undefined;
 export const median = (l = []) => {
