@@ -14,6 +14,7 @@
                     <col/>
                     <col/>
                     <col/>
+                    <col class="kommentti"/>
                 </colgroup>
                 <thead>
                 <tr>
@@ -482,8 +483,19 @@
         padding: 2px 5px 2px 10px;
         text-align: left;
         color: gray;
-        padding-right: 20px;
     }
+
+    .kommentti div {
+        width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .kommentti:hover div {
+        white-space: normal;
+    }
+
 
     td.kommentti, th.kommentti {
         border-left: 1px solid lightgrey;
