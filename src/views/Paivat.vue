@@ -18,7 +18,7 @@
                 </colgroup>
                 <thead>
                 <tr>
-                    <th class="toiminnot uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</th>
+                    <th></th>
                     <th colspan="2">Pvm</th>
                     <th colspan="2">Tuloaika - <br> Lähtöaika</th>
                     <th><small>Lounas</small></th>
@@ -31,9 +31,6 @@
                 </tr>
                 </thead>
                 <tbody>
-                    <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
-                </tbody>
-                <tbody>
                     <PaivaTilastoRivi title="Min" :values="minValues"/>
                     <PaivaTilastoRivi title="Max" :values="maxValues"/>
                     <PaivaTilastoRivi title="Avg" :values="avgValues"/>
@@ -41,7 +38,8 @@
                 </tbody>
                 <tbody>
                 <tr>
-                    <td colspan="12" class="rajoitus">
+                    <td class="toiminnot uusi" v-on:click="local.uusi = true; local.editId = undefined;">+</td>
+                    <td colspan="11" class="rajoitus">
                         <div class="clickable"
                              v-for="sivukoko in sivukoot"
                              v-bind:key="sivukoko.name"
@@ -49,6 +47,9 @@
                              v-on:click="local.sivukoko = sivukoko">{{ sivukoko.name }}</div>
                     </td>
                 </tr>
+                </tbody>
+                <tbody>
+                    <UusiRivi v-if="local.uusi" v-bind:done="uusiRiviLisatty"></UusiRivi>
                 </tbody>
                 <tbody>
                 <tr v-for="paiva in computedPaivat" v-bind:key="paiva.date"
@@ -459,13 +460,13 @@
         padding: 10px 20px;
     }
 
-    th.uusi {
+    .uusi {
         font-size: 30px;
         font-weight: bold;
         color: #4CAF50;
     }
 
-    th.uusi:hover {
+    .uusi:hover {
         color: white;
         background-color: #4CAF50;
     }
