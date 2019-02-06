@@ -130,7 +130,7 @@
                 </tbody>
                 <tbody v-if="computedPaivat.length > 35">
                 <tr>
-                    <td colspan="11" class="rajoitus">
+                    <td colspan="12" class="rajoitus">
                         <div class="clickable"
                              v-for="sivukoko in sivukoot"
                              v-bind:key="sivukoko.name"
