@@ -8,7 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "axios": "^0.21.2",
+    "axios": "^0.30.2",
     "chart.js": "^2.9.4",
     "lodash": "^4.17.21",
     "numeral": "^2.0.6",
